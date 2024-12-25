@@ -1,0 +1,11 @@
+{
+    "compiler": "MinGW",
+    "project": "hello-triangle",
+    "include_dirs": ["../../include"],
+    "source_dirs": ["./"],
+    "libraries": {
+        "Lotus": "../../../build/lotus.core"
+    },
+    "output": "exe",
+    "output_dir": "build"
+}
