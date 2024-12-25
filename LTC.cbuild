@@ -1,9 +1,9 @@
 {
     "compiler": "MinGW",
     "project": "Lotus",
-    "include_dirs": ["lotus/include", "lotus/lotus.core"],
-    "source_dirs": ["lotus/lotus.core"],
-    "defines": ["SOGL_EXPORT"],
+    "include_dirs": ["include", "modules/lotus.core"],
+    "source_dirs": ["modules/lotus.core"],
+    "defines": ["LOTUS_EXPORT"],
     "libraries": {
         "gdi32": null,
         "opengl32": null
