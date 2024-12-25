@@ -1,5 +1,5 @@
 #include "../lotus_platform.h"
 
-#if LOTUS_PLATFORM_MACOS == LOTUS_TRUE
+#if defined(LOTUS_PLATFORM_MACOS)
 
 #endif

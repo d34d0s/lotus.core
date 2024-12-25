@@ -2,6 +2,7 @@
 
 #if defined(LOTUS_PLATFORM_WINDOWS)
     #include <GL/gl.h>
+    #include <GL/glu.h>
 #elif defined(LOTUS_PLATFORM_MACOS)
     #include <OpenGL/OpenGL.h>
     #include <OpenGL/gl.h>

@@ -1,6 +1,7 @@
 #include "lotus_glapi.h"
 
 #include "../platform/lotus_logger.h"
+#include "../platform/lotus_platform.h"
 
 // BUFFER FUNCTIONS
 
@@ -89,6 +90,8 @@ const ubyte *(*lotus_get_string)(const ubyte4 name);
 
 // OpenGL function pointer loading mechanism
 #if defined(LOTUS_PLATFORM_WINDOWS)
+#include <Windows.h>
+#include <windowsx.h>
     void* lotus_get_fptr(const char* name) {
         void* proc = (void*)wglGetProcAddress(name);
         if (proc == NULL || (proc == (void*)0x1) || (proc == (void*)0x2) || (proc == (void*)0x3) || (proc == (void*)-1)) {

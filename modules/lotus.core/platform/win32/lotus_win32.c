@@ -1,6 +1,6 @@
 #include "../lotus_platform.h"
 
-#if LOTUS_PLATFORM_WINDOWS == LOTUS_TRUE
+#if defined(LOTUS_PLATFORM_WINDOWS)
 
 #include <Windows.h>
 #include <windowsx.h>   // parameter input extraction
