@@ -51,6 +51,8 @@ int main() {
     lotus_set_midframe(&app, midframe);
     lotus_set_postframe(&app, postframe);
 
+    array_test();
+
     lotus_run_application(&app);
 
     lotus_destroy_window(&app);

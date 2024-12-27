@@ -96,8 +96,8 @@ void lotus_insert_array(void* array, ubyte4 index, void* in_value) {
         return;
     }
 
-    if (index > length | length >= capacity) {
-        array = lotus_resize_array(array, capacity*2);
+    if (length >= capacity) {
+        array = lotus_resize_array(array, capacity * 2);
         header = (ubyte4*)((char*)array - LOTUS_ARRAY_HEADER_SIZE);
     }
 
