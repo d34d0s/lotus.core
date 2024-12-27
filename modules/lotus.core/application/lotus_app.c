@@ -8,14 +8,12 @@ ubyte lotus_init_app(lotus_application* instance, char* name) {
     if (!name) name = "SoGL Application";
 
     instance->info.name = name;
-    
-    if (!lotus_platform_init(&instance->state.platform)) {
+
+    instance->state.platform = lotus_platform_init();
+    if (!instance->state.platform) {
         lotus_log_fatal("Failed to initialize platform layer!");
     }
     
-    if (!lotus_event_init(&instance->state.event)) {
-        lotus_log_fatal("Failed to initialize event layer!");
-    }
     instance->preframe_callback = NULL;
     instance->midframe_callback = NULL;
     instance->postframe_callback = NULL;
@@ -67,6 +65,11 @@ ubyte lotus_make_window(lotus_application* instance, char* title, ubyte4 locatio
     return LOTUS_TRUE;
 }
 
+void lotus_destroy_window(lotus_application* instance) {
+    if (!instance || !instance->state.running) return;
+    lotus_platform_destroy_window(&instance->resource.window);
+}
+
 ubyte lotus_run_application(lotus_application* instance) {
     lotus_set_log_level(LOTUS_LOG_FATAL);
     ubyte result = LOTUS_FALSE;
@@ -99,12 +102,11 @@ ubyte lotus_run_application(lotus_application* instance) {
 void lotus_exit_app(lotus_application* instance) {
     if (!instance) return;
     instance->info.name = "NULL";
+    instance->state.platform = NULL;
     instance->preframe_callback = NULL;
     instance->midframe_callback = NULL;
     instance->postframe_callback = NULL;
     instance->fixedframe_callback = NULL;
     instance->state.running = LOTUS_FALSE;
-
-    lotus_event_exit(&instance->state.event);
-    lotus_platform_exit(&instance->state.platform);
+    lotus_platform_exit();
 }

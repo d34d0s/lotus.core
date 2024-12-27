@@ -5,6 +5,6 @@
     "source_dirs": ["modules/lotus.ECS"],
     "defines": ["LOTUS_EXPORT"],
     "libraries": { "Lotus": "build/lotus.core" },
-    "output": "dylib",
+    "output": "dll",
     "output_dir": "build/lotus.ECS"
 }

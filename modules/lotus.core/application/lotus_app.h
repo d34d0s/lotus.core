@@ -17,8 +17,7 @@ struct lotus_application {
 
     struct state {
         ubyte running;
-        lotus_event_state event;
-        lotus_platform_state platform;
+        lotus_platform_state* platform;
     } state;
 
     struct resource {
@@ -32,8 +31,10 @@ struct lotus_application {
 };
 
 LOTUS_API_ENTRY ubyte lotus_init_app(lotus_application* instance, char* name);
+LOTUS_API_ENTRY void lotus_exit_app(lotus_application* instance);
 
 LOTUS_API_ENTRY ubyte lotus_make_window(lotus_application* instance, char* title, ubyte4 location[2], ubyte4 size[2]);
+LOTUS_API_ENTRY void lotus_destroy_window(lotus_application* instance);
 
 LOTUS_API_ENTRY ubyte lotus_run_application(lotus_application* instance);
 
@@ -41,5 +42,3 @@ LOTUS_API_ENTRY ubyte lotus_set_preframe(lotus_application* instance, lotus_pref
 LOTUS_API_ENTRY ubyte lotus_set_fixedframe(lotus_application* instance, lotus_fixedframe_callback callback);
 LOTUS_API_ENTRY ubyte lotus_set_midframe(lotus_application* instance, lotus_midframe_callback callback);
 LOTUS_API_ENTRY ubyte lotus_set_postframe(lotus_application* instance, lotus_postframe_callback callback);
-
-LOTUS_API_ENTRY void lotus_exit_app(lotus_application* instance);

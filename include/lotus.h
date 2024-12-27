@@ -19,7 +19,7 @@
     #include "../modules/lotus.core/graphics/lotus_glapi.h"
 #endif // LOTUS_GRAPHICS
 
-#ifdef LOTUS_ECS
+#if defined(LOTUS_ECS)
     #include "../modules/lotus.ECS/lotus_ecs.h"
 #endif // LOTUS_ECS
 

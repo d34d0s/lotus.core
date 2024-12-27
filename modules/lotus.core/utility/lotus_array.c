@@ -1,82 +1,109 @@
 #include "lotus_array.h"
 
-lotus_array lotus_make_array(lotus_allocator* alloc, ubyte8 length, ubyte8 stride) {
-    lotus_array arr;
+void lotus_print_array(char* tag, void* array) {
+    ubyte4* header = (ubyte4*)((char*)array - LOTUS_ARRAY_HEADER_SIZE);
+    ubyte4 size = header[0];
+    ubyte4 stride = header[1];
+    ubyte4 length = header[2];
+    ubyte4 capacity = header[3];
 
-    size_t header_size = 3 * sizeof(ubyte8);
-
-    arr.mem = lotus_alloc(alloc, header_size + (length * stride), LOTUS_ALIGNOF(void*));
-
-    arr.header = (ubyte8*)arr.mem.ptr;
-    
-    arr.header[0] = 0;          // current size
-    arr.header[1] = stride;     // stride of each element
-    arr.header[2] = length;     // length of array
-
-    arr.content = ((char*)arr.mem.ptr) + header_size;
-
-    return arr;
+    printf("|(Array): %s\n", tag);
+    printf("|(size): %d bytes (stride): %d bytes (length): %d elems (capacity): %d elems\n", size, stride, length, capacity);
 }
 
-void lotus_destroy_array(lotus_allocator* alloc, lotus_array array) {
-    lotus_free(alloc, array.mem);
-    array.header = NULL;
-    array.content = NULL;
-}
-
-void lotus_resize_array(lotus_allocator* alloc, lotus_array* array, ubyte8 new_length) {
-    size_t header_size = 3 * sizeof(ubyte8);
-    size_t new_size = header_size + (new_length * lotus_get_array_attr(*array, LOTUS_ARRAY_STRIDE));
-    
-    // allocate new memory
-    lotus_memory new_mem = lotus_alloc(alloc, new_size, LOTUS_ALIGNOF(void*));
-    ubyte8* new_header = (ubyte8*)new_mem.ptr;
-    void* new_content = ((char*)new_mem.ptr) + header_size;
-    
-    // copy old data
-    memcpy(new_header, array->header, header_size);
-    memcpy(new_content, array->content, array->header[LOTUS_ARRAY_SIZE] * array->header[LOTUS_ARRAY_STRIDE]);
-
-    // free old memory
-    lotus_free(alloc, array->mem);
-
-    // update array
-    array->mem = new_mem;
-    array->header = new_header;
-    array->content = new_content;
-    array->header[LOTUS_ARRAY_LENGTH] = new_length;
-}
-
-void lotus_push_array(lotus_allocator* alloc, lotus_array* array, const lotus_memory* element) {
-    ubyte8 size = lotus_get_array_attr(*array, LOTUS_ARRAY_SIZE);
-    ubyte8 length = lotus_get_array_attr(*array, LOTUS_ARRAY_LENGTH);
-    ubyte8 stride = lotus_get_array_attr(*array, LOTUS_ARRAY_STRIDE);
-
-    // resize if necessary
-    if (size >= length) {
-        lotus_resize_array(alloc, array, length * 2);
+void* lotus_make_array(ubyte4 stride, ubyte4 capacity) {
+    void* arr = malloc(LOTUS_ARRAY_HEADER_SIZE + (capacity * stride));
+    if (!arr) {
+        printf("Failed to allocate array!\n");
+        return NULL;
     }
 
-    // add element
-    memcpy((char*)array->content + (size * stride), element->ptr, stride);
-    array->header[LOTUS_ARRAY_SIZE]++;
+    ubyte4* header = (ubyte4*)((char*)arr);
+    header[0] = LOTUS_ARRAY_HEADER_SIZE + (capacity * stride);
+    header[1] = stride;
+    header[2] = 0;
+    header[3] = capacity;
+
+    void* content = (void*)((char*)arr + LOTUS_ARRAY_HEADER_SIZE);
+    return content;
 }
 
-lotus_memory _lotus_pop_array(lotus_array* array) {
-    lotus_memory element = { .ptr = NULL, .size = 0 };
+void lotus_destroy_array(void* array) {
+    ubyte4* header = (ubyte4*)((char*)array - LOTUS_ARRAY_HEADER_SIZE);
+    free(header);
+}
 
-    // check if the array has elements to pop
-    if (array->header[LOTUS_ARRAY_SIZE] > 0) {
-        ubyte8 size = array->header[LOTUS_ARRAY_SIZE];
-        ubyte8 stride = array->header[LOTUS_ARRAY_STRIDE];
+void* lotus_resize_array(void* array, ubyte4 new_capacity) {
+    ubyte4* header = (ubyte4*)((char*)array - LOTUS_ARRAY_HEADER_SIZE);
+    ubyte4 stride = LOTUS_ARRAY_STRIDE(array);
 
-        // point to the last element in the array
-        element.ptr = (char*)array->content + ((size - 1) * stride);
-        element.size = stride;
+    ubyte4 total_size = LOTUS_ARRAY_HEADER_SIZE + (new_capacity * stride);
 
-        // decrease the size of the array
-        array->header[LOTUS_ARRAY_SIZE]--;
+    void* temp = realloc(header, total_size);
+    if (!temp) {
+        printf("Failed to re-allocate array!\n");
+        return NULL;
     }
 
-    return element;
+    header = (ubyte4*)((char*)temp);
+    header[0] = LOTUS_ARRAY_HEADER_SIZE + (new_capacity * stride);
+    header[2] = (header[2] > new_capacity) ? new_capacity : header[2];
+    header[3] = new_capacity;
+
+    void* content = (void*)((char*)temp + LOTUS_ARRAY_HEADER_SIZE);
+    return content;
+}
+
+void lotus_pop_array(void* array, void* out_value) {
+    ubyte4* header = (ubyte4*)((char*)array - LOTUS_ARRAY_HEADER_SIZE);
+    ubyte4 stride = LOTUS_ARRAY_STRIDE(array);
+    ubyte4 length = LOTUS_ARRAY_LENGTH(array);
+
+    if (length == 0) {
+        printf("Array is empty!\n");
+        return;
+    }
+
+    void* slot = (char*)array + ((length - 1) * stride);
+    memcpy(out_value, slot, stride);
+    header[2]--;
+}
+
+void lotus_push_array(void* array, void* in_value) {
+    ubyte4* header = (ubyte4*)((char*)array - LOTUS_ARRAY_HEADER_SIZE);
+    ubyte4 stride = LOTUS_ARRAY_STRIDE(array);
+    ubyte4 length = LOTUS_ARRAY_LENGTH(array);
+    ubyte4 capacity = LOTUS_ARRAY_CAPACITY(array);
+
+    if (length >= capacity) {
+        array = lotus_resize_array(array, capacity * 2);
+        header = (ubyte4*)((char*)array - LOTUS_ARRAY_HEADER_SIZE);
+    }
+
+    void* slot = (char*)array + (length * stride);
+    memcpy(slot, in_value, stride);
+    header[2]++;
+}
+
+void lotus_insert_array(void* array, ubyte4 index, void* in_value) {
+    ubyte4* header = (ubyte4*)((char*)array - LOTUS_ARRAY_HEADER_SIZE);
+    ubyte4 stride = LOTUS_ARRAY_STRIDE(array);
+    ubyte4 length = LOTUS_ARRAY_LENGTH(array);
+    ubyte4 capacity = LOTUS_ARRAY_CAPACITY(array);
+
+    if (index > capacity) {
+        printf("Index out of bounds!\n");
+        return;
+    }
+
+    if (index > length | length >= capacity) {
+        array = lotus_resize_array(array, capacity*2);
+        header = (ubyte4*)((char*)array - LOTUS_ARRAY_HEADER_SIZE);
+    }
+
+    void* slot = (char*)array + (index * stride);
+    if (index < length) memmove((char*)slot + stride, slot, (length - index) * stride);
+
+    memcpy((char*)slot, in_value, stride);
+    header[2]++;
 }

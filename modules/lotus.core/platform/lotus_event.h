@@ -84,18 +84,17 @@ struct lotus_event {
 };
 
 typedef struct lotus_event_register {
-    lotus_array events;
+    lotus_event* events;
 } lotus_event_register;
 
 typedef struct lotus_event_state {
     ubyte init;
-    lotus_allocator alloc;
     // event code lookup-table.
     lotus_event_register registered[LOTUS_EVENT_CODE_MAX];
 } lotus_event_state;
 
-ubyte lotus_event_init(lotus_event_state* state);
-void lotus_event_exit(lotus_event_state* state);
+lotus_event_state* lotus_init_event();
+void lotus_exit_event();
 
 /**
  * Push an event to listeners of the specified event code. If an event handler returns
@@ -105,7 +104,7 @@ void lotus_event_exit(lotus_event_state* state);
  * @param sender A pointer to the sender can be 0/NULL.
  * @returns `LOTUS_TRUE` if handles; otherwise `LOTUS_FALSE`
  */
-LOTUS_API_ENTRY ubyte lotus_push_event(lotus_event_state* state, lotus_event data, ubyte2 eventCode);
+LOTUS_API_ENTRY ubyte lotus_push_event(lotus_event data, ubyte2 eventCode);
 
 /**
  * Register to listen for when events are sent with the specified event code. Events with duplicate
@@ -115,7 +114,7 @@ LOTUS_API_ENTRY ubyte lotus_push_event(lotus_event_state* state, lotus_event dat
  * @param onEvent The callback function pointer to be invoked when the event code is pushed.
  * @returns `LOTUS_TRUE` if the event is successfully registered; otherwise `LOTUS_FALSE`.
  */
-LOTUS_API_ENTRY ubyte lotus_register_event(lotus_event_state* state, ubyte2 eventCode, lotus_callback onEvent);
+LOTUS_API_ENTRY ubyte lotus_register_event(ubyte2 eventCode, lotus_callback onEvent);
 
 /**
  * Unregister from listening for when events are sent with the specified event code. If no matching
@@ -125,5 +124,5 @@ LOTUS_API_ENTRY ubyte lotus_register_event(lotus_event_state* state, ubyte2 even
  * @param onEvent The callback function pointer to be unregistered.
  * @returns `LOTUS_TRUE` if the event is successfully unregistered; otherwise `LOTUS_FALSE`.
  */
-LOTUS_API_ENTRY ubyte lotus_unregister_event(lotus_event_state* state, ubyte2 eventCode, lotus_callback onEvent);
+LOTUS_API_ENTRY ubyte lotus_unregister_event(ubyte2 eventCode, lotus_callback onEvent);
 

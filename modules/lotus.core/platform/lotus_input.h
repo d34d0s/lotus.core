@@ -130,15 +130,29 @@ typedef enum lotus_keyboard_key {
     LOTUS_MAX_KEYS
 } lotus_keyboard_key;
 
-ubyte lotus_input_init();
-void lotus_input_exit();
+typedef struct _lotus_input_state {
+    sbyte2 mouse[2];
+    ubyte keys[256];
+    ubyte buttons[LOTUS_MBUTTON_MAX_BUTTONS];
+} _lotus_input_state;
 
-void lotus_process_mouse_wheel(sbyte z_delta);
+#define LOTUS_INPUT_STATE_PREVIOUS 0
+#define LOTUS_INPUT_STATE_CURRENT 1
+typedef struct lotus_input_state {
+    ubyte init;
+    _lotus_input_state current;
+    _lotus_input_state previous;
+} lotus_input_state;
+
+lotus_input_state* lotus_init_input(void);
+void lotus_exit_input(void);
+
+void lotus_process_mouse_wheel(sbyte z_delotus_a);
 void lotus_process_mouse_move(sbyte2 x, sbyte2 y);
 void lotus_process_key(lotus_keyboard_key key, ubyte pressed);
 void lotus_process_button(lotus_mouse_button button, ubyte pressed);
 
-LOTUS_API_ENTRY void lotus_input_update(f64 delta_time);
+LOTUS_API_ENTRY void lotus_update_input(f64 delta_time);
 
 LOTUS_API_ENTRY ubyte lotus_is_key_up(lotus_keyboard_key key);
 LOTUS_API_ENTRY ubyte lotus_was_key_up(lotus_keyboard_key key);

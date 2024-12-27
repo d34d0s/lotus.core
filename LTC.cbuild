@@ -8,6 +8,6 @@
         "gdi32": null,
         "opengl32": null
     },
-    "output": "dylib",
+    "output": "dll",
     "output_dir": "build/lotus.core"
 }

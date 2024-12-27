@@ -12,13 +12,98 @@ typedef struct _lotus_window_win32 {
     HINSTANCE instance;
 } _lotus_window_win32;
 
-ubyte lotus_platform_init(lotus_platform_state* state) { return LOTUS_TRUE; }
+static lotus_platform_state internal_platform_state = {0};
 
-void lotus_platform_exit(lotus_platform_state* state) { return; }
+lotus_platform_state* lotus_platform_init(void) {
+    internal_platform_state.platform = LOTUS_WINDOWS_TAG;
+    
+    internal_platform_state.state = NULL;
+    
+    internal_platform_state.event_state = lotus_init_event();
+    internal_platform_state.input_state = lotus_init_input();
 
-// on windows, the window processes system events as messages that need to be read from w/l params and handled accordingly
-// TODO: modify the event system to allow platform agnostic "hooks" or simply have each platform setup listeners/callbacks for events via a generic API
+    LARGE_INTEGER frequency;
+    QueryPerformanceFrequency(&frequency);
+    internal_platform_state.clock_frequency = 1.0 / (f64)frequency.QuadPart;
+    
+    return &internal_platform_state;
+}
+
+void lotus_platform_exit(void) {
+    lotus_exit_event();
+    lotus_exit_input();
+    internal_platform_state.state = NULL;
+    return;
+}
+
 LRESULT CALLBACK _lotus_window_process_win32(HWND handle, ubyte4 msg, WPARAM w, LPARAM l) {
+    switch(msg) {
+        case WM_ERASEBKGND: return 1;
+        case WM_QUIT:       // fall through WM_DESTROY
+        case WM_CLOSE:      // fall through WM_DESTROY
+        case WM_DESTROY:
+            lotus_push_event((lotus_event){.data.ubyte[0]=1}, LOTUS_EVENT_APP_QUIT);
+            PostQuitMessage(0);
+            return 0;
+        case WM_SIZE: {
+            RECT r;
+            GetClientRect(handle, &r);
+            ubyte2 w = r.right - r.left;
+            ubyte2 h = r.bottom - r.top;
+            // TODO: handle resize event with resize callback
+            lotus_push_event((lotus_event){.data.ubyte2[0]=w, .data.ubyte2[1]=h}, LOTUS_EVENT_RESIZE);
+        } break;
+        case WM_KEYUP:          // fall trough WM_SYSKEYUP
+        case WM_KEYDOWN:        // fall trough WM_SYSKEYUP
+        case WM_SYSKEYDOWN:     // fall trough WM_SYSKEYUP
+        case WM_SYSKEYUP: {
+            // key pressed/released
+            lotus_keyboard_key key = (ubyte2)w;
+            ubyte pressed = (msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN);
+            lotus_process_key(key, pressed);
+        } break;
+        case WM_MOUSEMOVE: {
+            // mouse movement
+            sbyte4 x = GET_X_LPARAM(l); 
+            sbyte4 y = GET_Y_LPARAM(l);
+            lotus_process_mouse_move(x, y);
+        } break;
+        case WM_MOUSEWHEEL: {
+            sbyte4 z = GET_WHEEL_DELTA_WPARAM(w);
+            if (z != 0) {
+                // clamp input to OS-independent values (-1, 1)
+                z = (z < 0) ? -1 : 1;
+                lotus_process_mouse_wheel(z);
+            }
+        } break;
+        case WM_LBUTTONDOWN:    // fall trough WM_RBUTTONUP
+        case WM_MBUTTONDOWN:    // fall trough WM_RBUTTONUP
+        case WM_RBUTTONDOWN:    // fall trough WM_RBUTTONUP
+        case WM_LBUTTONUP:      // fall trough WM_RBUTTONUP
+        case WM_MBUTTONUP:      // fall trough WM_RBUTTONUP
+        case WM_RBUTTONUP: {
+            lotus_mouse_button button = LOTUS_MBUTTON_MAX_BUTTONS;
+            ubyte pressed = msg == WM_LBUTTONDOWN || msg == WM_RBUTTONDOWN || msg == WM_MBUTTONDOWN;
+            switch (msg) {
+                case WM_LBUTTONDOWN:
+                case WM_LBUTTONUP:
+                    button = LOTUS_MBUTTON_LEFT;
+                    break;
+                
+                case WM_MBUTTONDOWN:
+                case WM_MBUTTONUP:
+                    button = LOTUS_MBUTTON_MIDDLE;
+                    break;
+                
+                case WM_RBUTTONDOWN:
+                case WM_RBUTTONUP:
+                    button = LOTUS_MBUTTON_RIGHT;
+                    break;
+            }
+            if (button != LOTUS_MBUTTON_MAX_BUTTONS) lotus_process_button(button, pressed);
+        } break;
+    }
+    
     return DefWindowProcA(handle, msg, w, l);
 }
 
@@ -68,16 +153,15 @@ lotus_window lotus_platform_make_window(char* title, sbyte4 x, sbyte4 y, sbyte4 
     w += windowBorder.right - windowBorder.left;
     h += windowBorder.bottom - windowBorder.top;
 
-    HWND handle = CreateWindowExA(
+    window_state->handle = CreateWindowExA(
         windowExStyle, "SoGL Window", title,
         windowStyle, x, y, w, h, 0, 0, window_state->instance, 0
     );
 
-    if (handle == 0) {
+    if (window_state->handle == 0) {
         MessageBoxA(0, "Window Creation Failed", "Error", MB_ICONEXCLAMATION | MB_OK);
         return (lotus_window){0};
-    } else { 
-        window_state->handle = handle;
+    } else {
         sprintf(window.title, "%s", title);
         window.size[0] = w;
         window.size[1] = h;
@@ -119,6 +203,38 @@ lotus_window lotus_platform_make_window(char* title, sbyte4 x, sbyte4 y, sbyte4 
     return window;
 }
 
+void lotus_platform_destroy_window(lotus_window* window) {
+    _lotus_window_win32* window_state = (_lotus_window_win32*)window->state;
+    if (window_state) {
+        if (window_state->gl_context) {
+            wglDeleteContext(window_state->gl_context);
+        }
+        if (window_state->device_context) {
+            ReleaseDC(window_state->handle, window_state->device_context);
+        }
+        DestroyWindow(window_state->handle);
+        free(window_state);
+    }
+    window->state = NULL;
+}
+
+f64 lotus_platform_get_time(void) {
+    LARGE_INTEGER nowTime;
+    QueryPerformanceCounter(&nowTime);
+    return (f64)nowTime.QuadPart * internal_platform_state.clock_frequency;
+}
+
+void lotus_platform_sleep(ubyte8 ms) { Sleep(ms); }
+
+ubyte lotus_platform_pump(void) {
+    MSG message;
+    while(PeekMessageA(&message, NULL, 0, 0, PM_REMOVE)) {
+        TranslateMessage(&message);
+        DispatchMessageA(&message);
+    }
+    return LOTUS_TRUE;
+}
+
 ubyte lotus_platform_make_glcontext(lotus_window* window) {
     _lotus_window_win32* window_state = (_lotus_window_win32*)window->state;
 
@@ -129,6 +245,11 @@ ubyte lotus_platform_make_glcontext(lotus_window* window) {
     }
 
     return LOTUS_TRUE;
+}
+
+void lotus_platform_swap_buffers(lotus_window* window) {
+    _lotus_window_win32* window_state = (_lotus_window_win32*)window->state;
+    SwapBuffers(GetDC(window_state->handle));
 }
 
 #endif // LOTUS_PLATFORM_WINDOWS == LOTUS_TRUE
