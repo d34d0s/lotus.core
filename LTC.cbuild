@@ -1,13 +1,13 @@
 {
     "compiler": "MinGW",
     "project": "Lotus",
-    "include_dirs": ["include", "modules/lotus.core"],
+    "include_dirs": ["include"],
     "source_dirs": ["modules/lotus.core"],
     "defines": ["LOTUS_EXPORT"],
     "libraries": {
         "gdi32": null,
         "opengl32": null
     },
-    "output": "dll",
+    "output": "dylib",
     "output_dir": "build/lotus.core"
 }

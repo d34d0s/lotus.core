@@ -25,3 +25,4 @@ void lotus_platform_exit(lotus_platform_state* state);
 
 lotus_window lotus_platform_make_window(char* title, sbyte4 x, sbyte4 y, sbyte4 w, sbyte4 h);
 ubyte lotus_platform_make_glcontext(lotus_window* window);
+void lotus_platform_swap_buffers(lotus_window* window);
