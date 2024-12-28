@@ -1,5 +1,6 @@
 #include "lotus_hashmap.h"
 
+#include "../utility/lotus_array.h"
 #include "../platform/lotus_logger.h"
 
 _LOTUS_PRIVATE int lotus_string_hash(const char* buffer) {
@@ -12,18 +13,18 @@ _LOTUS_PRIVATE int lotus_string_hash(const char* buffer) {
 
 _LOTUS_PRIVATE bool lotus_probe_hashmap_f(lotus_hashmap* m, int* kHash, const char* key) {
     bool match = 0;
-    lotus_key_value* kvp = m->map[*kHash];
+    lotus_key_value kvp = m->map[*kHash];
     
     for (int i = *kHash+1; i < m->max; i++) {
         kvp = m->map[i];
         if (key == NULL) {
-            if (!kvp) {
+            if (!kvp.k) {
                 match = 1;
                 *kHash = i;
                 break;
             } else continue;
         } else {
-            if (kvp && !strcmp(key, kvp->k)) {
+            if (kvp.k && !strcmp(key, kvp.k)) {
                 *kHash = i;
                 match = 1;
                 break;
@@ -34,18 +35,18 @@ _LOTUS_PRIVATE bool lotus_probe_hashmap_f(lotus_hashmap* m, int* kHash, const ch
 
 _LOTUS_PRIVATE bool lotus_probe_hashmap_r(lotus_hashmap* m, int* kHash, const char* key) {
     bool match = 0;
-    lotus_key_value* kvp = m->map[*kHash];
+    lotus_key_value kvp = m->map[*kHash];
     
     for (int i = *kHash-1; i > 0; i--) {
         kvp = m->map[i];
         if (key == NULL) {
-            if (!kvp) {
+            if (!kvp.k) {
                 match = 1;
                 *kHash = i;
                 break;
             } else continue;
         } else {
-            if (kvp && !strcmp(key, kvp->k)) {
+            if (kvp.k && !strcmp(key, kvp.k)) {
                 match = 1;
                 *kHash = i;
                 break;
@@ -65,7 +66,7 @@ lotus_hashmap* lotus_make_hashmap(int max) {
     m->max = max;
     m->count = 0;
 
-    m->map = (lotus_key_value**)calloc(max, sizeof(lotus_key_value*));
+    m->map = (lotus_key_value*)lotus_make_array(sizeof(lotus_key_value*), max);
     if (!m->map) {
         free(m);
         lotus_set_log_level(LOTUS_LOG_ERROR);
@@ -77,13 +78,7 @@ lotus_hashmap* lotus_make_hashmap(int max) {
 }
 
 void lotus_destroy_hashmap(lotus_hashmap* m) {
-    for (int i = 0; i < m->max; i++) {
-        if (m->map[i]) {
-            free(m->map[i]->v);
-            free(m->map[i]);
-        }
-    }
-    free(m->map);
+    lotus_destroy_array(m->map);
     free(m);
 }
 
@@ -91,9 +86,9 @@ void* lotus_get_hashmap(lotus_hashmap* m, const char* key) {
     if (!key) { return NULL; }
 
     int kHash = lotus_string_hash(key) % m->max;
-    lotus_key_value* kvp = m->map[kHash];
+    lotus_key_value kvp = m->map[kHash];
 
-    if (kvp && strcmp(key, kvp->k)) {
+    if (kvp.k && strcmp(key, kvp.k)) {
         bool match = 0;
 
         // forward probing
@@ -111,19 +106,19 @@ void* lotus_get_hashmap(lotus_hashmap* m, const char* key) {
         }
         
         kvp = m->map[kHash];
-    }; return kvp->v;
+    }; return kvp.v;
 }
 
 lotus_error_type lotus_set_hashmap(lotus_hashmap* m, const char* key, void* value) {
     if (!key || !value || m->count+1 > m->max) { return LOTUS_ERR_TYPE; }
 
     int kHash = lotus_string_hash(key) % m->max;
-    lotus_key_value* kvp = m->map[kHash];
+    lotus_key_value kvp = m->map[kHash];
 
     // resolve collisions with open addressing + linear probing
-    if (kvp) {
-        if (!strcmp(key, kvp->k)) {
-            m->map[kHash]->v = value;
+    if (kvp.k) {
+        if (!strcmp(key, kvp.k)) {
+            m->map[kHash].v = value;
             return LOTUS_ERR_NONE;        
         }
 
@@ -142,10 +137,10 @@ lotus_error_type lotus_set_hashmap(lotus_hashmap* m, const char* key, void* valu
         }
     }
 
-    m->map[kHash] = (lotus_key_value*)malloc(sizeof(lotus_key_value));
-    m->map[kHash]->k = strdup(key);
-    m->map[kHash]->v = value;
-    m->count++;
+    // m->map[kHash] = (lotus_key_value*)malloc(sizeof(lotus_key_value));
+    m->map[kHash].k = strdup(key);
+    m->map[kHash].v = value;
+    LOTUS_ARRAY_SET_HEADER_FIELD(m->map, LOTUS_ARRAY_LENGTH_FIELD, m->count++);
     return LOTUS_ERR_NONE;
 }
 
@@ -153,9 +148,9 @@ lotus_error_type lotus_rem_hashmap(lotus_hashmap* m, const char* key) {
     if (!key) { return LOTUS_ERR_TYPE; }
 
     int kHash = lotus_string_hash(key) % m->max;
-    lotus_key_value* kvp = m->map[kHash];
+    lotus_key_value kvp = m->map[kHash];
 
-    if (kvp && strcmp(key, kvp->k)) {
+    if (kvp.k && strcmp(key, kvp.k)) {
         bool match = 0;
 
         // forward probing
@@ -175,8 +170,8 @@ lotus_error_type lotus_rem_hashmap(lotus_hashmap* m, const char* key) {
         kvp = m->map[kHash];
     };
     
-    free(m->map[kHash]->v);
-    free(m->map[kHash]);
-    m->map[kHash] = NULL;
+    m->map[kHash].k = NULL;
+    m->map[kHash].v = NULL;
+    LOTUS_ARRAY_SET_HEADER_FIELD(m->map, LOTUS_ARRAY_LENGTH_FIELD, m->count--);
     return LOTUS_ERR_NONE;
 }
