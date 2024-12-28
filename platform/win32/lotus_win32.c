@@ -14,7 +14,9 @@ typedef struct _lotus_window_win32 {
 
 static lotus_platform_state internal_platform_state = {0};
 
-lotus_platform_state* lotus_platform_init(void) {
+lotus_platform_state* lotus_get_state_ptr_platform(void) { return &internal_platform_state; }
+
+lotus_platform_state* lotus_init_platform(void) {
     internal_platform_state.platform = LOTUS_WINDOWS_TAG;
     
     internal_platform_state.state = NULL;
@@ -29,7 +31,7 @@ lotus_platform_state* lotus_platform_init(void) {
     return &internal_platform_state;
 }
 
-void lotus_platform_exit(void) {
+void lotus_exit_platform(void) {
     lotus_exit_event();
     lotus_exit_input();
     internal_platform_state.state = NULL;

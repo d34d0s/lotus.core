@@ -9,7 +9,7 @@ ubyte lotus_init_app(lotus_application* instance, char* name) {
 
     instance->info.name = name;
 
-    instance->state.platform = lotus_platform_init();
+    instance->state.platform = lotus_init_platform();
     if (!instance->state.platform) {
         lotus_log_fatal("Failed to initialize platform layer!");
     }
@@ -108,5 +108,5 @@ void lotus_exit_app(lotus_application* instance) {
     instance->postframe_callback = NULL;
     instance->fixedframe_callback = NULL;
     instance->state.running = LOTUS_FALSE;
-    lotus_platform_exit();
+    lotus_exit_platform();
 }

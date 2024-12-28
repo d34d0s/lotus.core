@@ -25,6 +25,8 @@ typedef long double f80, f96, f128;
 #define LOTUS_TRUE     1
 #define LOTUS_FALSE    0
 
+#define LOTUS_LITERAL(type, value) &(type){value}
+
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__)
     #define LOTUS_PLATFORM_WINDOWS 1
     #ifndef _WIN64

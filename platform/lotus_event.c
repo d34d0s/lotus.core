@@ -17,7 +17,7 @@ ubyte lotus_push_event(lotus_event data, ubyte2 eventCode) {
     if (!internal_event_state.init) return LOTUS_FALSE;
     if (internal_event_state.registered[eventCode].events == NULL) return LOTUS_FALSE;
 
-    ubyte8 count = LOTUS_ARRAY_LENGTH(internal_event_state.registered[eventCode].events);
+    ubyte8 count = LOTUS_ARRAY_GET_HEADER_FIELD(internal_event_state.registered[eventCode].events, LOTUS_ARRAY_LENGTH_FIELD);
     for (ubyte8 i = 0; i < count; ++i) {
         lotus_event event = internal_event_state.registered[eventCode].events[i];
         if(event.callback(data, eventCode)) {
@@ -37,7 +37,7 @@ ubyte lotus_register_event(ubyte2 eventCode, lotus_callback onEvent) {
         internal_event_state.registered[eventCode].events = lotus_make_array(sizeof(lotus_event), LOTUS_EVENT_CODE_MAX);
     }
 
-    ubyte8 count = LOTUS_ARRAY_LENGTH(internal_event_state.registered[eventCode].events);
+    ubyte8 count = LOTUS_ARRAY_GET_HEADER_FIELD(internal_event_state.registered[eventCode].events, LOTUS_ARRAY_LENGTH_FIELD);
 
     // no duplicate event found, continue with registration
     ubyte8 index = (count > 0) ? count : 0;
@@ -56,7 +56,7 @@ ubyte lotus_unregister_event(ubyte2 eventCode, lotus_callback onEvent) {
         return LOTUS_FALSE;
     }
 
-    ubyte8 count = LOTUS_ARRAY_LENGTH(internal_event_state.registered[eventCode].events);
+    ubyte8 count = LOTUS_ARRAY_GET_HEADER_FIELD(internal_event_state.registered[eventCode].events, LOTUS_ARRAY_LENGTH_FIELD);
     for (ubyte8 i = 0; i < count; ++i) {
         internal_event_state.registered[eventCode].events[i] = (lotus_event){NULL};
         return LOTUS_TRUE;
