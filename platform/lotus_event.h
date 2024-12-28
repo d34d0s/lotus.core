@@ -7,7 +7,7 @@
 #define LOTUS_EVENT_CODE_MAX 16384
 
 typedef struct lotus_event lotus_event;
-typedef ubyte (*lotus_callback)(lotus_event data, ubyte2 eventCode);
+typedef ubyte (*lotus_callback)(lotus_event data, ubyte2 event_code);
 
 // internal event codes. user application should use codes > 255.
 typedef enum lotus_event_code {
@@ -100,29 +100,29 @@ void lotus_exit_event();
  * Push an event to listeners of the specified event code. If an event handler returns
  * `LOTUS_TRUE`, the event is considered handled and is passed no further.
  * @param data The event data.
- * @param eventCode The event code to push.
+ * @param event_code The event code to push.
  * @param sender A pointer to the sender can be 0/NULL.
  * @returns `LOTUS_TRUE` if handles; otherwise `LOTUS_FALSE`
  */
-LOTUS_API_ENTRY ubyte lotus_push_event(lotus_event data, ubyte2 eventCode);
+LOTUS_API_ENTRY ubyte lotus_push_event(lotus_event data, ubyte2 event_code);
 
 /**
  * Register to listen for when events are sent with the specified event code. Events with duplicate
  * listener/callback combinations will not be re-registered and will cause this function to return `LOTUS_FALSE`.
- * @param eventCode The event code to listen for.
+ * @param event_code The event code to listen for.
  * @param listener A pointer to a listener instance. Can be 0/NULL.
  * @param onEvent The callback function pointer to be invoked when the event code is pushed.
  * @returns `LOTUS_TRUE` if the event is successfully registered; otherwise `LOTUS_FALSE`.
  */
-LOTUS_API_ENTRY ubyte lotus_register_event(ubyte2 eventCode, lotus_callback onEvent);
+LOTUS_API_ENTRY ubyte lotus_register_event(ubyte2 event_code, lotus_callback onEvent);
 
 /**
  * Unregister from listening for when events are sent with the specified event code. If no matching
  * registration is found, this function returns `LOTUS_FALSE`.
- * @param eventCode The event code to stop listening for.
+ * @param event_code The event code to stop listening for.
  * @param listener A pointer to a listener instance. Can be 0/NULL.
  * @param onEvent The callback function pointer to be unregistered.
  * @returns `LOTUS_TRUE` if the event is successfully unregistered; otherwise `LOTUS_FALSE`.
  */
-LOTUS_API_ENTRY ubyte lotus_unregister_event(ubyte2 eventCode, lotus_callback onEvent);
+LOTUS_API_ENTRY ubyte lotus_unregister_event(ubyte2 event_code, lotus_callback onEvent);
 
