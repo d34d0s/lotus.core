@@ -2,8 +2,10 @@
 
 #include "../defines.h"
 
-#include "../utility/lotus_math.h"
 #include "../memory/lotus_memory.h"
+
+#include "../utility/lotus_math.h"
+#include "../utility/lotus_hashmap.h"
 
 // GL equivalent defines
 #define LOTUS_STATIC_DRAW                0x88E4
@@ -39,13 +41,25 @@
 #define LOTUS_COLOR_V3(r, g, b) lotus_new_vec3(r/255.0, g/255.0, b/255.0)
 #define LOTUS_COLOR_V4(r, g, b, a) lotus_new_vec4(r/255.0, g/255.0, b/255.0, a/255.0)
 
-typedef enum lotus_buffer_attr {
-    LOTUS_LOCATION_ATTR = 1 << 0, // 1 (0b0001)
-    LOTUS_COLOR_ATTR    = 1 << 1, // 2 (0b0010)
-    LOTUS_TCOORD_ATTR   = 1 << 2, // 4 (0b0100)
-    LOTUS_NORMAL_ATTR   = 1 << 3, // 8 (0b1000)
-    SO_VERTEX_ATTRIBS  = 1 << 4 
-} lotus_buffer_attr;
+typedef enum lotus_uniform_type {
+    LOTUS_UNIFORM_NONE=0,
+    LOTUS_UNIFORM_VEC2,
+    LOTUS_UNIFORM_VEC3,
+    LOTUS_UNIFORM_VEC4,
+    LOTUS_UNIFORM_MAT4,
+    LOTUS_UNIFORM_TYPES
+} lotus_uniform_type;
+
+typedef struct lotus_shader {
+    sbyte4 program;
+    lotus_hashmap* uniforms;
+} lotus_shader;
+
+typedef struct lotus_shader_uniform {
+    sbyte4 location;
+    void* value;
+    const char* name;
+} lotus_shader_uniform;
 
 typedef struct lotus_draw_buffer {
     ubyte4 handle[3];
@@ -65,7 +79,7 @@ typedef enum lotus_render_mode {
 typedef struct lotus_renderer {
     ubyte8 draws;
     ubyte8 passes;
-    ubyte4 shader;
+    lotus_shader* shader;
     lotus_mat4 projection;
     lotus_render_mode mode;
     lotus_vec4 clear_color;
@@ -78,4 +92,11 @@ void lotus_renderer_submit(ubyte4 vbo, ubyte4 ebo, ubyte4 vao, lotus_mat4 matrix
 void lotus_renderer_flush(void);
 void lotus_renderer_destroy(void);
 
-void lotus_renderer_clear_color(f32 r, f32 g, f32 b, f32 a);
+LOTUS_API_ENTRY void lotus_renderer_set_clear_color(f32 r, f32 g, f32 b, f32 a);
+LOTUS_API_ENTRY void lotus_renderer_set_shader(lotus_shader* shader);
+
+LOTUS_API_ENTRY lotus_shader lotus_make_shader(const char* vertex_shader, const char* fragment_shader);
+LOTUS_API_ENTRY void lotus_destroy_shader(lotus_shader* shader);
+
+LOTUS_API_ENTRY void lotus_set_uniform(lotus_shader program, lotus_uniform_type type, const char* name, void* value);
+LOTUS_API_ENTRY lotus_shader_uniform lotus_get_uniform(lotus_shader program, const char* name);

@@ -1,0 +1,10 @@
+{
+    "compiler": "MinGW",
+    "project": "LotusECS",
+    "include_dirs": ["include", "modules/lotus.ECS"],
+    "source_dirs": ["modules/lotus.ECS"],
+    "defines": ["LOTUS_EXPORT"],
+    "libraries": { "Lotus": "build/lotus.core" },
+    "output": "dll",
+    "output_dir": "build/lotus.ECS"
+}

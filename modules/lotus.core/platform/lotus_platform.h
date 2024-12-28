@@ -32,8 +32,6 @@ typedef struct lotus_window {
     ubyte4 location[2];
 } lotus_window;
 
-lotus_platform_state* lotus_get_state_ptr_platform(void);
-
 lotus_platform_state* lotus_platform_init(void);
 void lotus_platform_exit(void);
 
