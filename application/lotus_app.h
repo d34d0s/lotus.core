@@ -3,7 +3,7 @@
 #include "../memory/lotus_memory.h"
 #include "../platform/lotus_platform.h"
 
-#include "../graphics/lotus_gfx.h"
+#include "../graphics/lotus_gl.h"
 #include "../platform/lotus_input.h"
 #include "../platform/lotus_event.h"
 
