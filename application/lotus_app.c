@@ -1,15 +1,16 @@
 #include "lotus_app.h"
 
+#include "../graphics/lotus_glapi.h"
 #include "../platform/lotus_logger.h"
 
-ubyte lotus_init_app(lotus_application* instance, char* name) {
+ubyte lotus_app_init(lotus_application* instance, char* name) {
     lotus_set_log_level(LOTUS_LOG_FATAL);
     if (!instance) return LOTUS_FALSE;
     if (!name) name = "SoGL Application";
 
     instance->info.name = name;
 
-    instance->state.platform = lotus_init_platform();
+    instance->state.platform = lotus_platform_init();
     if (!instance->state.platform) {
         lotus_log_fatal("Failed to initialize platform layer!");
     }
@@ -23,31 +24,31 @@ ubyte lotus_init_app(lotus_application* instance, char* name) {
     return LOTUS_TRUE;
 }
 
-ubyte lotus_set_preframe(lotus_application* instance, lotus_preframe_callback callback) {
+ubyte lotus_app_set_preframe(lotus_application* instance, lotus_preframe_callback callback) {
     if (!instance || !instance->state.running) return LOTUS_FALSE;
     instance->preframe_callback = callback;
     return LOTUS_TRUE;
 }
 
-ubyte lotus_set_fixedframe(lotus_application* instance, lotus_fixedframe_callback callback) {
+ubyte lotus_app_set_fixedframe(lotus_application* instance, lotus_fixedframe_callback callback) {
     if (!instance || !instance->state.running) return LOTUS_FALSE;
     instance->fixedframe_callback = callback;
     return LOTUS_TRUE;
 }
 
-ubyte lotus_set_midframe(lotus_application* instance, lotus_midframe_callback callback) {
+ubyte lotus_app_set_midframe(lotus_application* instance, lotus_midframe_callback callback) {
     if (!instance || !instance->state.running) return LOTUS_FALSE;
     instance->midframe_callback = callback;
     return LOTUS_TRUE;
 }
 
-ubyte lotus_set_postframe(lotus_application* instance, lotus_postframe_callback callback) {
+ubyte lotus_app_set_postframe(lotus_application* instance, lotus_postframe_callback callback) {
     if (!instance || !instance->state.running) return LOTUS_FALSE;
     instance->postframe_callback = callback;
     return LOTUS_TRUE;
 }
 
-ubyte lotus_make_window(lotus_application* instance, char* title, ubyte4 location[2], ubyte4 size[2]) {
+ubyte lotus_app_make_window(lotus_application* instance, char* title, ubyte4 location[2], ubyte4 size[2]) {
     lotus_set_log_level(LOTUS_LOG_FATAL);
     if (!instance || !instance->state.running) return LOTUS_FALSE;
     instance->resource.window = lotus_platform_make_window((title != NULL) ? title : instance->info.name, location[0], location[1], size[0], size[1]);
@@ -65,12 +66,12 @@ ubyte lotus_make_window(lotus_application* instance, char* title, ubyte4 locatio
     return LOTUS_TRUE;
 }
 
-void lotus_destroy_window(lotus_application* instance) {
+void lotus_app_destroy_window(lotus_application* instance) {
     if (!instance || !instance->state.running) return;
     lotus_platform_destroy_window(&instance->resource.window);
 }
 
-ubyte lotus_run_application(lotus_application* instance) {
+ubyte lotus_app_run(lotus_application* instance) {
     lotus_set_log_level(LOTUS_LOG_FATAL);
     ubyte result = LOTUS_FALSE;
     if (!instance || !instance->state.running) return result;
@@ -99,7 +100,7 @@ ubyte lotus_run_application(lotus_application* instance) {
     return result;
 }
 
-void lotus_exit_app(lotus_application* instance) {
+void lotus_app_exit(lotus_application* instance) {
     if (!instance) return;
     instance->info.name = "NULL";
     instance->state.platform = NULL;
@@ -108,5 +109,5 @@ void lotus_exit_app(lotus_application* instance) {
     instance->postframe_callback = NULL;
     instance->fixedframe_callback = NULL;
     instance->state.running = LOTUS_FALSE;
-    lotus_exit_platform();
+    lotus_platform_exit();
 }

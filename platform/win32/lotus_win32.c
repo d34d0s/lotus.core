@@ -16,13 +16,13 @@ static lotus_platform_state internal_platform_state = {0};
 
 lotus_platform_state* lotus_get_state_ptr_platform(void) { return &internal_platform_state; }
 
-lotus_platform_state* lotus_init_platform(void) {
+lotus_platform_state* lotus_platform_init(void) {
     internal_platform_state.platform = LOTUS_WINDOWS_TAG;
     
     internal_platform_state.state = NULL;
     
     internal_platform_state.event_state = lotus_init_event();
-    internal_platform_state.input_state = lotus_init_input();
+    internal_platform_state.input_state = lotus_input_init();
 
     LARGE_INTEGER frequency;
     QueryPerformanceFrequency(&frequency);
@@ -31,9 +31,9 @@ lotus_platform_state* lotus_init_platform(void) {
     return &internal_platform_state;
 }
 
-void lotus_exit_platform(void) {
+void lotus_platform_exit(void) {
     lotus_exit_event();
-    lotus_exit_input();
+    lotus_input_exit();
     internal_platform_state.state = NULL;
     return;
 }

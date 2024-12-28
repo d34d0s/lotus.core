@@ -5,68 +5,68 @@
 
 static lotus_input_state internal_input_state = {0};
 
-lotus_input_state* lotus_init_input(void) {
+lotus_input_state* lotus_input_init(void) {
     internal_input_state.init = LOTUS_TRUE;
     return &internal_input_state;
 }
 
-void lotus_exit_input(void) {
+void lotus_input_exit(void) {
     internal_input_state.init = LOTUS_FALSE;
 }
 
-void lotus_update_input(f64 delta_time) {
+void lotus_input_update(f64 delta_time) {
     if (!internal_input_state.init) return;
     memcpy(&internal_input_state.previous, &internal_input_state.current, sizeof(_lotus_input_state));
 }
 
-ubyte lotus_is_key_up(lotus_keyboard_key key) {
+ubyte lotus_key_is_up(lotus_keyboard_key key) {
     if (!internal_input_state.init) return LOTUS_FALSE;
     return internal_input_state.current.keys[key] == LOTUS_FALSE;
 }
 
-ubyte lotus_was_key_up(lotus_keyboard_key key) {
+ubyte lotus_key_was_up(lotus_keyboard_key key) {
     if (!internal_input_state.init) return LOTUS_FALSE;
     return internal_input_state.previous.keys[key] == LOTUS_FALSE;
 }
 
-ubyte lotus_is_key_down(lotus_keyboard_key key) {
+ubyte lotus_key_is_down(lotus_keyboard_key key) {
     if (!internal_input_state.init) return LOTUS_FALSE;
     return internal_input_state.current.keys[key] == LOTUS_TRUE;
 }
 
-ubyte lotus_was_key_down(lotus_keyboard_key key) {
+ubyte lotus_key_was_down(lotus_keyboard_key key) {
     if (!internal_input_state.init) return LOTUS_FALSE;
     return internal_input_state.previous.keys[key] == LOTUS_TRUE;
 }
 
-ubyte lotus_is_button_up(lotus_mouse_button button) {
+ubyte lotus_button_is_up(lotus_mouse_button button) {
     if (!internal_input_state.init) return LOTUS_FALSE;
     return internal_input_state.current.buttons[button] == LOTUS_FALSE;
 }
 
-ubyte lotus_was_button_up(lotus_mouse_button button) {
+ubyte lotus_button_was_up(lotus_mouse_button button) {
     if (!internal_input_state.init) return LOTUS_FALSE;
     return internal_input_state.previous.buttons[button] == LOTUS_FALSE;
 }
 
-ubyte lotus_is_button_down(lotus_mouse_button button) {
+ubyte lotus_button_is_down(lotus_mouse_button button) {
     if (!internal_input_state.init) return LOTUS_FALSE;
     return internal_input_state.current.buttons[button] == LOTUS_TRUE;
 }
 
-ubyte lotus_was_button_down(lotus_mouse_button button) {
+ubyte lotus_button_was_down(lotus_mouse_button button) {
     if (!internal_input_state.init) return LOTUS_FALSE;
     return internal_input_state.previous.buttons[button] == LOTUS_TRUE;
 }
 
-void lotus_get_mouse_position(sbyte4* x, sbyte4* y) {
+void lotus_mouse_get_position(sbyte4* x, sbyte4* y) {
     if (!internal_input_state.init) {
         *x = 0; *y = 0;
         return;
     }; *x = internal_input_state.current.mouse[0]; *y = internal_input_state.current.mouse[1];
 }
 
-void lotus_get_previous_mouse_position(sbyte4* x, sbyte4* y) {
+void lotus_mouse_get_last_position(sbyte4* x, sbyte4* y) {
     if (!internal_input_state.init) {
         *x = 0; *y = 0;
         return;

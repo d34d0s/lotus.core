@@ -1,6 +1,6 @@
-#include "lotus_gfx.h"
-
+#include "lotus_gl.h"
 #include "lotus_glapi.h"
+
 #include "../utility/lotus_array.h"
 
 static lotus_renderer internal_renderer_state = {0};
@@ -13,18 +13,24 @@ void lotus_renderer_init(void) {
     internal_renderer_state.shader = -1;
     internal_renderer_state.mode = GL_TRIANGLES;
     internal_renderer_state.projection = lotus_identity();
+    internal_renderer_state.clear_color = LOTUS_COLOR_V4(133, 161, 172, 255);
 
     internal_renderer_state.queue = lotus_make_array(sizeof(lotus_draw_buffer), LOTUS_MAX_DRAW_BUFFERS);
 
-    lotus_enable(GL_DEPTH_TEST);
-    lotus_enable(GL_BLEND);
-    lotus_blend_func(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    lgl_enable(GL_DEPTH_TEST);
+    lgl_enable(GL_BLEND);
+    lgl_blend_func(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
-void lotus_renderer_begin(ubyte4 mode, lotus_mat4 projection) {
+void lotus_renderer_begin(lotus_render_mode mode, f32 r, f32 g, f32 b, f32 a, lotus_mat4 projection) {
     internal_renderer_state.draws = 0;
     internal_renderer_state.mode = mode;
     internal_renderer_state.projection = projection;
+    internal_renderer_state.clear_color = LOTUS_COLOR_V4(r, g, b, a);
+}
+
+void lotus_renderer_clear_color(f32 r, f32 g, f32 b, f32 a) {
+    internal_renderer_state.clear_color = LOTUS_COLOR_V4(r, g, b, a);
 }
 
 void lotus_renderer_submit(ubyte4 vbo, ubyte4 ebo, ubyte4 vao, lotus_mat4 matrix, ubyte4 index_count, ubyte4 vertex_count) {
@@ -46,24 +52,31 @@ void lotus_renderer_submit(ubyte4 vbo, ubyte4 ebo, ubyte4 vao, lotus_mat4 matrix
 }
 
 void lotus_renderer_flush() {
+    lgl_clear_color(
+        internal_renderer_state.clear_color.x,
+        internal_renderer_state.clear_color.y,
+        internal_renderer_state.clear_color.z,
+        internal_renderer_state.clear_color.w
+    ); lgl_clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     for (ubyte8 i = 0; i < internal_renderer_state.draws; ++i) {
         lotus_draw_buffer buf;
         lotus_pop_array(internal_renderer_state.queue, &buf);
 
-        lotus_bind_vertex_array(buf.handle[LOTUS_BUFFER_VAO]);
+        lgl_bind_vertex_array(buf.handle[LOTUS_BUFFER_VAO]);
 
         // Set shader uniforms
         // lotus_set_uniform_mat4(internal_renderer_state.shader, "u_projection", &internal_renderer_state.projection);
         // lotus_set_uniform_mat4(internal_renderer_state.shader, "u_model", buf.matrix);
 
         // Issue draw call
-        if (buf.handle[LOTUS_BUFFER_EBO] != -1) {
-            lotus_draw_elements(internal_renderer_state.mode, buf.index_count, GL_UNSIGNED_INT, NULL);
+        if (buf.handle[LOTUS_BUFFER_EBO] >= 0) {
+            lgl_draw_elements(internal_renderer_state.mode, buf.index_count, GL_UNSIGNED_INT, NULL);
         } else {
-            lotus_draw_arrays(internal_renderer_state.mode, 0, buf.vertex_count);
+            lgl_draw_arrays(internal_renderer_state.mode, 0, buf.vertex_count);
         }
 
-        lotus_bind_vertex_array(0);
+        lgl_bind_vertex_array(0);
         internal_renderer_state.passes++;
     }
 
@@ -78,8 +91,8 @@ void lotus_renderer_destroy() {
 
     lotus_destroy_array(internal_renderer_state.queue);
 
-    lotus_disable(GL_DEPTH_TEST);
-    lotus_disable(GL_BLEND);
+    lgl_disable(GL_DEPTH_TEST);
+    lgl_disable(GL_BLEND);
 }
 
 

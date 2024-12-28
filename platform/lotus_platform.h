@@ -34,8 +34,8 @@ typedef struct lotus_window {
 
 lotus_platform_state* lotus_get_state_ptr_platform(void);
 
-lotus_platform_state* lotus_init_platform(void);
-void lotus_exit_platform(void);
+lotus_platform_state* lotus_platform_init(void);
+void lotus_platform_exit(void);
 
 lotus_window lotus_platform_make_window(char* title, sbyte4 x, sbyte4 y, sbyte4 w, sbyte4 h);
 void lotus_platform_destroy_window(lotus_window* window);
