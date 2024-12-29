@@ -1,6 +1,6 @@
 {
     "compiler": "MinGW",
-    "project": "hello-triangle",
+    "project": "lotus_test",
     "include_dirs": ["../../include"],
     "source_dirs": ["./"],
     "libraries": {
