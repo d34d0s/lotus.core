@@ -69,13 +69,13 @@ void _lotus_rem_mesh(void* data, lotus_entity entity) {
     mesh_data->attrs[entity] = 0;
     
     lgl_delete_buffers(1, &mesh_data->vbo[entity]);
-    mesh_data->vbo[entity] = -1;
+    mesh_data->vbo[entity] = 0;
     
     lgl_delete_buffers(1, &mesh_data->ebo[entity]);
-    mesh_data->ebo[entity] = -1;
+    mesh_data->ebo[entity] = 0;
     
     lgl_delete_vertex_arrays(1, &mesh_data->vao[entity]);
-    mesh_data->vao[entity] = -1;
+    mesh_data->vao[entity] = 0;
     
     mesh_data->n_indices[entity] = 0;
     mesh_data->n_vertices[entity] = 0;
@@ -112,28 +112,28 @@ void _lotus_set_mesh(void* data, lotus_component component, lotus_entity entity)
             }
         }
 
-        lgl_gen_vertex_arrays(1, &component.data.mesh_data.vao);
-        lgl_gen_buffers(1, &component.data.mesh_data.vbo);
+        lgl_gen_vertex_arrays(1, &mesh_data->vao[entity]);
+        lgl_gen_buffers(1, &mesh_data->vbo[entity]);
 
-        lgl_bind_vertex_array(component.data.mesh_data.vao);
-        lgl_bind_buffer(LOTUS_ARRAY_BUFFER, component.data.mesh_data.vao);
+        lgl_bind_vertex_array(mesh_data->vao[entity]);
+        lgl_bind_buffer(LOTUS_ARRAY_BUFFER, mesh_data->vbo[entity]);
         
         size_t vertex_data_size = component.data.mesh_data.n_vertices * (stride * sizeof(f32));
         lgl_buffer_data(LOTUS_ARRAY_BUFFER, vertex_data_size, component.data.mesh_data.vertices, LOTUS_STATIC_DRAW);
 
         // generate EBO if indices are provided
         if (component.data.mesh_data.n_indices > 0 && component.data.mesh_data.indices) {
-            lgl_gen_buffers(1, &component.data.mesh_data.ebo);
-            lgl_bind_buffer(LOTUS_ELEMENT_ARRAY_BUFFER, component.data.mesh_data.ebo);
+            lgl_gen_buffers(1, &mesh_data->ebo[entity]);
+
+            lgl_bind_buffer(LOTUS_ELEMENT_ARRAY_BUFFER, mesh_data->ebo[entity]);
             
             size_t index_data_size = component.data.mesh_data.n_indices * sizeof(ubyte4);
             lgl_buffer_data(LOTUS_ELEMENT_ARRAY_BUFFER, index_data_size, component.data.mesh_data.indices, LOTUS_STATIC_DRAW);
             
-            mesh_data->ebo[entity] = component.data.mesh_data.ebo;
             mesh_data->indices[entity] = component.data.mesh_data.indices;
             mesh_data->n_indices[entity] = component.data.mesh_data.n_indices;
         } else {
-            mesh_data->ebo[entity] = -1;
+            mesh_data->ebo[entity] = 0;
             mesh_data->indices[entity] = NULL;
             mesh_data->n_indices[entity] = 0;
         }
@@ -157,8 +157,6 @@ void _lotus_set_mesh(void* data, lotus_component component, lotus_entity entity)
         lgl_bind_vertex_array(0);
 
         mesh_data->attrs[entity] = component.data.mesh_data.attrs;
-        mesh_data->vbo[entity] = component.data.mesh_data.vbo;
-        mesh_data->vao[entity] = component.data.mesh_data.vao;
         mesh_data->n_vertices[entity] = component.data.mesh_data.n_vertices;
         mesh_data->vertices[entity] = component.data.mesh_data.vertices;
 

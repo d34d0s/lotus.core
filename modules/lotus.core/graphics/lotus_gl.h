@@ -63,7 +63,7 @@ typedef struct lotus_shader_uniform {
 
 typedef struct lotus_draw_buffer {
     ubyte4 handle[3];
-    lotus_mat4 matrix;
+    lotus_mat4* matrix;
     ubyte4 index_count;
     ubyte4 vertex_count;
 } lotus_draw_buffer;
@@ -88,7 +88,7 @@ typedef struct lotus_renderer {
 
 void lotus_renderer_init(void);
 void lotus_renderer_begin(lotus_render_mode mode, f32 r, f32 g, f32 b, f32 a, lotus_mat4 projection);
-void lotus_renderer_submit(ubyte4 vbo, ubyte4 ebo, ubyte4 vao, lotus_mat4 matrix, ubyte4 index_count, ubyte4 vertex_count);
+void lotus_renderer_submit(ubyte4 vbo, ubyte4 ebo, ubyte4 vao, lotus_mat4* matrix, ubyte4 index_count, ubyte4 vertex_count);
 void lotus_renderer_flush(void);
 void lotus_renderer_destroy(void);
 

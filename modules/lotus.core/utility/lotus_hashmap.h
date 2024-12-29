@@ -11,7 +11,7 @@ typedef struct lotus_key_value {
 typedef struct lotus_hashmap {
     int max;
     int count;
-    lotus_key_value* map;
+    lotus_key_value** map;
 } lotus_hashmap;
 
 /**
