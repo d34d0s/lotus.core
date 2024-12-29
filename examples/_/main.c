@@ -27,17 +27,19 @@ char fShader[] = {
 lotus_shader my_shader;
 
 // camera-data handled manually until implementation :)
+lotus_mat4 m_view;
+lotus_vec3 up = {0.0f, 1.0f, 0.0f};
 lotus_vec3 eye = {0.0f, 0.0f, 1.0f};
 lotus_vec3 center = {0.0f, 0.0f, 0.0f};
-lotus_vec3 up = {0.0f, 1.0f, 0.0f};
-lotus_mat4 m_model;
-lotus_mat4 m_view;
 
 lotus_application app;
-lotus_entity e0;
-lotus_component e0_mesh;
+
 lotus_entity_manager em;
 lotus_component_manager cm;
+
+lotus_entity e0;
+lotus_component e0_mesh;
+lotus_component e0_transform;
 
 ubyte my_callback(lotus_event data, ubyte2 event_code) {
     if (event_code == LOTUS_EVENT_KEY_PRESSED) {
@@ -51,22 +53,40 @@ ubyte4 preframe(void) {
     return LOTUS_TRUE;
 }
 
-ubyte drawn;
 ubyte4 midframe(void) {
     if (lotus_key_is_down(LOTUS_KEY_F12) || lotus_key_is_down(LOTUS_KEY_ESCAPE)) {
         app.state.running = LOTUS_FALSE;
     }
 
-    lotus_set_uniform(my_shader, LOTUS_UNIFORM_MAT4, "u_model", &m_model);
+    // apply transforms before sending data to GPU
+    lotus_vec3 v_translation = lotus_new_vec3(
+        e0_transform.data.transform.location.x + 0.001,
+        e0_transform.data.transform.location.y,
+        e0_transform.data.transform.location.z
+    );
+
+    lotus_mat4 m_translation = lotus_mul_mat4(lotus_identity(), lotus_trans_mat4(
+        e0_transform.data.transform.location.x,
+        e0_transform.data.transform.location.y,
+        e0_transform.data.transform.location.z
+    ));
+
+    // update component data internally and then externally
+    lotus_set_component(&cm, (lotus_component){
+        .type = LOTUS_TRANSFORM_COMPONENT,
+        .data.transform.model = m_translation,
+        .data.transform.location = v_translation,
+    }, e0); e0_transform = lotus_get_component(&cm, LOTUS_TRANSFORM_COMPONENT, e0);
+
     lotus_set_uniform(my_shader, LOTUS_UNIFORM_MAT4, "u_view", &m_view);
     
     lotus_renderer_submit(
-        e0_mesh.data.mesh_data.vbo,
-        e0_mesh.data.mesh_data.ebo,
-        e0_mesh.data.mesh_data.vao,
-        &m_model,
-        e0_mesh.data.mesh_data.n_indices,
-        e0_mesh.data.mesh_data.n_vertices
+        e0_mesh.data.mesh.vbo,
+        e0_mesh.data.mesh.ebo,
+        e0_mesh.data.mesh.vao,
+        &e0_transform.data.transform.model,
+        e0_mesh.data.mesh.n_indices,
+        e0_mesh.data.mesh.n_vertices
     );
 
     return LOTUS_TRUE;
@@ -86,15 +106,14 @@ void ecs_test() {
     printf("My First Entity: %d\n", e0);
 
     lotus_add_component(&cm, LOTUS_MESH_COMPONENT, e0);
+    lotus_add_component(&cm, LOTUS_TRANSFORM_COMPONENT, e0);
 
     lotus_set_component(&cm, 
         (lotus_component){ 
             .type = LOTUS_MESH_COMPONENT, 
-            .data.mesh_data.attrs = LOTUS_LOCATION_ATTR | LOTUS_COLOR_ATTR,
-            .data.mesh_data.n_indices = 0,
-            .data.mesh_data.indices = NULL,
-            .data.mesh_data.n_vertices = 3,
-            .data.mesh_data.vertices = (f32[]){
+            .data.mesh.attrs = LOTUS_LOCATION_ATTR | LOTUS_COLOR_ATTR,
+            .data.mesh.n_vertices = 3,
+            .data.mesh.vertices = (f32[]){
                 -0.5, -0.5, 0.5, 1.0, 0.0, 0.0,
                  0.5, -0.5, 0.5, 0.0, 1.0, 0.0,
                  0.0,  0.5, 0.5, 0.0, 0.0, 1.0
@@ -103,6 +122,7 @@ void ecs_test() {
     );
 
     e0_mesh = lotus_get_component(&cm, LOTUS_MESH_COMPONENT, e0);
+    e0_transform = lotus_get_component(&cm, LOTUS_TRANSFORM_COMPONENT, e0);
 }
 
 int main() {
@@ -122,11 +142,10 @@ int main() {
     lotus_register_event(LOTUS_EVENT_KEY_PRESSED, my_callback);
 
     my_shader = lotus_make_shader(vShader, fShader);
-
-    m_model = lotus_identity();
-    m_view = lotus_look_at(eye, center, up);
-
     lotus_renderer_set_shader(&my_shader);
+
+    // set camera view matrix
+    m_view = lotus_look_at(eye, center, up);
 
     lotus_app_run(&app);
 

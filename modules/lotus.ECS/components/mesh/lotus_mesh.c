@@ -53,18 +53,43 @@ ubyte _lotus_validate_mesh_data(lotus_mesh_data* data) {
     ) ? LOTUS_FALSE : LOTUS_TRUE;
 }
 
+void _increment_mesh_data_arrays(lotus_mesh_data* data, ubyte4 count) {
+    lotus_mesh_data* mesh_data = (lotus_mesh_data*)data;
+    if (!_lotus_validate_mesh_data(mesh_data)) return;
+
+    LOTUS_ARRAY_SET_HEADER_FIELD(mesh_data->attrs, LOTUS_ARRAY_LENGTH_FIELD, count);
+    LOTUS_ARRAY_SET_HEADER_FIELD(mesh_data->vbo, LOTUS_ARRAY_LENGTH_FIELD, count);
+    LOTUS_ARRAY_SET_HEADER_FIELD(mesh_data->ebo, LOTUS_ARRAY_LENGTH_FIELD, count);
+    LOTUS_ARRAY_SET_HEADER_FIELD(mesh_data->vao, LOTUS_ARRAY_LENGTH_FIELD, count);
+    LOTUS_ARRAY_SET_HEADER_FIELD(mesh_data->n_vertices, LOTUS_ARRAY_LENGTH_FIELD, count);
+    LOTUS_ARRAY_SET_HEADER_FIELD(mesh_data->n_indices, LOTUS_ARRAY_LENGTH_FIELD, count);
+    LOTUS_ARRAY_SET_HEADER_FIELD(mesh_data->vertices, LOTUS_ARRAY_LENGTH_FIELD, count);
+    LOTUS_ARRAY_SET_HEADER_FIELD(mesh_data->indices, LOTUS_ARRAY_LENGTH_FIELD, count);
+}
+
 void _lotus_add_mesh(void* data, lotus_entity entity) {
     lotus_mesh_data* mesh_data = (lotus_mesh_data*)data;
     if (!_lotus_validate_mesh_data(mesh_data)) return;
     ubyte4 count = LOTUS_ARRAY_GET_HEADER_FIELD(mesh_data->attrs, LOTUS_ARRAY_LENGTH_FIELD);
+    _increment_mesh_data_arrays(mesh_data, count+1);
 
-    LOTUS_ARRAY_SET_HEADER_FIELD(mesh_data->attrs, LOTUS_ARRAY_LENGTH_FIELD, count+1);
+    mesh_data->attrs[entity] = 0;
+    
+    mesh_data->vbo[entity] = 0;
+    mesh_data->ebo[entity] = 0;
+    mesh_data->vao[entity] = 0;
+    
+    mesh_data->n_indices[entity] = 0;
+    mesh_data->n_vertices[entity] = 0;
+    mesh_data->vertices[entity] = NULL;
+    mesh_data->indices[entity] = NULL;
 }
 
 void _lotus_rem_mesh(void* data, lotus_entity entity) {
     lotus_mesh_data* mesh_data = (lotus_mesh_data*)data;
     if (!_lotus_validate_mesh_data(mesh_data)) return;
     ubyte4 count = LOTUS_ARRAY_GET_HEADER_FIELD(mesh_data->attrs, LOTUS_ARRAY_LENGTH_FIELD);
+    _increment_mesh_data_arrays(mesh_data, count-1);
     
     mesh_data->attrs[entity] = 0;
     
@@ -81,8 +106,6 @@ void _lotus_rem_mesh(void* data, lotus_entity entity) {
     mesh_data->n_vertices[entity] = 0;
     mesh_data->vertices[entity] = NULL;
     mesh_data->indices[entity] = NULL;
-    
-    LOTUS_ARRAY_SET_HEADER_FIELD(mesh_data->attrs, LOTUS_ARRAY_LENGTH_FIELD, count-1);
 }
 
 void _lotus_set_mesh(void* data, lotus_component component, lotus_entity entity) {
@@ -90,7 +113,7 @@ void _lotus_set_mesh(void* data, lotus_component component, lotus_entity entity)
     if (!_lotus_validate_mesh_data(mesh_data) || component.type != LOTUS_MESH_COMPONENT) return;
 
     if (component.type == LOTUS_MESH_COMPONENT) {
-        if ((component.data.mesh_data.attrs & ~((1 << LOTUS_VERTEX_ATTRIBS) - 1)) != 0 || !component.data.mesh_data.vertices) {
+        if ((component.data.mesh.attrs & ~((1 << LOTUS_VERTEX_ATTRIBS) - 1)) != 0 || !component.data.mesh.vertices) {
             return;
         }
 
@@ -105,7 +128,7 @@ void _lotus_set_mesh(void* data, lotus_component component, lotus_entity entity)
         };
 
         for (int i = 0; i < LOTUS_VERTEX_ATTRIBS; i++) {
-            if ((component.data.mesh_data.attrs & (1 << i)) != 0) {
+            if ((component.data.mesh.attrs & (1 << i)) != 0) {
                 // accumulate stride for enabled vertex attributes
                 offsets[i] = stride;
                 stride += attr_sizes[i];
@@ -118,20 +141,20 @@ void _lotus_set_mesh(void* data, lotus_component component, lotus_entity entity)
         lgl_bind_vertex_array(mesh_data->vao[entity]);
         lgl_bind_buffer(LOTUS_ARRAY_BUFFER, mesh_data->vbo[entity]);
         
-        size_t vertex_data_size = component.data.mesh_data.n_vertices * (stride * sizeof(f32));
-        lgl_buffer_data(LOTUS_ARRAY_BUFFER, vertex_data_size, component.data.mesh_data.vertices, LOTUS_STATIC_DRAW);
+        size_t vertex_data_size = component.data.mesh.n_vertices * (stride * sizeof(f32));
+        lgl_buffer_data(LOTUS_ARRAY_BUFFER, vertex_data_size, component.data.mesh.vertices, LOTUS_STATIC_DRAW);
 
         // generate EBO if indices are provided
-        if (component.data.mesh_data.n_indices > 0 && component.data.mesh_data.indices) {
+        if (component.data.mesh.n_indices > 0 && component.data.mesh.indices) {
             lgl_gen_buffers(1, &mesh_data->ebo[entity]);
 
             lgl_bind_buffer(LOTUS_ELEMENT_ARRAY_BUFFER, mesh_data->ebo[entity]);
             
-            size_t index_data_size = component.data.mesh_data.n_indices * sizeof(ubyte4);
-            lgl_buffer_data(LOTUS_ELEMENT_ARRAY_BUFFER, index_data_size, component.data.mesh_data.indices, LOTUS_STATIC_DRAW);
+            size_t index_data_size = component.data.mesh.n_indices * sizeof(ubyte4);
+            lgl_buffer_data(LOTUS_ELEMENT_ARRAY_BUFFER, index_data_size, component.data.mesh.indices, LOTUS_STATIC_DRAW);
             
-            mesh_data->indices[entity] = component.data.mesh_data.indices;
-            mesh_data->n_indices[entity] = component.data.mesh_data.n_indices;
+            mesh_data->indices[entity] = component.data.mesh.indices;
+            mesh_data->n_indices[entity] = component.data.mesh.n_indices;
         } else {
             mesh_data->ebo[entity] = 0;
             mesh_data->indices[entity] = NULL;
@@ -140,7 +163,7 @@ void _lotus_set_mesh(void* data, lotus_component component, lotus_entity entity)
 
         // configure vertex attributes dynamically
         for (int i = 0; i < LOTUS_VERTEX_ATTRIBS; i++) {
-            if ((component.data.mesh_data.attrs & (1 << i)) != 0) {
+            if ((component.data.mesh.attrs & (1 << i)) != 0) {
                 lgl_vertex_attrib_pointer(
                     i, 
                     attr_sizes[i], 
@@ -156,9 +179,9 @@ void _lotus_set_mesh(void* data, lotus_component component, lotus_entity entity)
         lgl_bind_buffer(LOTUS_ARRAY_BUFFER, 0);
         lgl_bind_vertex_array(0);
 
-        mesh_data->attrs[entity] = component.data.mesh_data.attrs;
-        mesh_data->n_vertices[entity] = component.data.mesh_data.n_vertices;
-        mesh_data->vertices[entity] = component.data.mesh_data.vertices;
+        mesh_data->attrs[entity] = component.data.mesh.attrs;
+        mesh_data->n_vertices[entity] = component.data.mesh.n_vertices;
+        mesh_data->vertices[entity] = component.data.mesh.vertices;
 
     } else { return; }
 }
@@ -169,13 +192,13 @@ lotus_component _lotus_get_mesh(void* data, lotus_entity entity) {
     
     return (lotus_component){
         .type = LOTUS_MESH_COMPONENT,
-        .data.mesh_data.attrs = mesh_data->attrs[entity],
-        .data.mesh_data.vbo = mesh_data->vbo[entity],
-        .data.mesh_data.ebo = mesh_data->ebo[entity],
-        .data.mesh_data.vao = mesh_data->vao[entity],
-        .data.mesh_data.n_indices = mesh_data->n_indices[entity],
-        .data.mesh_data.n_vertices = mesh_data->n_vertices[entity],
-        .data.mesh_data.vertices = mesh_data->vertices[entity],
-        .data.mesh_data.indices = mesh_data->indices[entity]
+        .data.mesh.attrs = mesh_data->attrs[entity],
+        .data.mesh.vbo = mesh_data->vbo[entity],
+        .data.mesh.ebo = mesh_data->ebo[entity],
+        .data.mesh.vao = mesh_data->vao[entity],
+        .data.mesh.n_indices = mesh_data->n_indices[entity],
+        .data.mesh.n_vertices = mesh_data->n_vertices[entity],
+        .data.mesh.vertices = mesh_data->vertices[entity],
+        .data.mesh.indices = mesh_data->indices[entity]
     };
 }

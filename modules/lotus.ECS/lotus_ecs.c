@@ -1,6 +1,7 @@
 #include "lotus_ecs.h"
 
 static lotus_mesh_data internal_mesh_data = {0};
+static lotus_transform_data internal_transform_data = {0};
 
 ubyte lotus_init_ecs(lotus_entity_manager* e_manager, lotus_component_manager* c_manager) {
     e_manager->next = 0;
@@ -15,6 +16,16 @@ ubyte lotus_init_ecs(lotus_entity_manager* e_manager, lotus_component_manager* c
             _lotus_get_mesh
         );
     }
+    
+    if (_lotus_init_transform_data(&internal_transform_data)) {
+        lotus_register_component(
+            c_manager, LOTUS_TRANSFORM_COMPONENT, &internal_transform_data,
+            _lotus_add_transform,
+            _lotus_rem_transform,
+            _lotus_set_transform,
+            _lotus_get_transform
+        );
+    }
 
     return LOTUS_TRUE;
 }
@@ -24,7 +35,9 @@ void lotus_exit_ecs(lotus_entity_manager* e_manager, lotus_component_manager* c_
     e_manager->count = 0;
 
     _lotus_destroy_mesh_data(&internal_mesh_data);
+    _lotus_destroy_transform_data(&internal_transform_data);
     lotus_unregister_component(c_manager, LOTUS_MESH_COMPONENT);
+    lotus_unregister_component(c_manager, LOTUS_TRANSFORM_COMPONENT);
 }
 
 lotus_entity lotus_make_entity(lotus_entity_manager* manager) {

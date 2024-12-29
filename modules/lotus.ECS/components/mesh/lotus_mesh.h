@@ -10,7 +10,7 @@ typedef enum lotus_vertex_attr {
     LOTUS_VERTEX_ATTRIBS  = 1 << 4 
 } lotus_vertex_attr;
 
-typedef struct lotus_mesh_itf {
+typedef struct lotus_mesh_component {
     ubyte attrs;
     ubyte4 vbo;
     ubyte4 ebo;
@@ -19,7 +19,7 @@ typedef struct lotus_mesh_itf {
     ubyte4 n_indices;
     f32* vertices;
     ubyte4* indices;
-} lotus_mesh_itf;
+} lotus_mesh_component;
 
 typedef struct lotus_mesh_data {
     ubyte* attrs;

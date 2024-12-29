@@ -7,7 +7,8 @@
 #include "transform/lotus_transform.h"
 
 typedef union lotus_component_data {
-    lotus_mesh_itf mesh_data;
+    lotus_mesh_component mesh;
+    lotus_transform_component transform;
 } lotus_component_data;
 
 // tagged component union
