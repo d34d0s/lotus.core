@@ -30,7 +30,7 @@ struct lotus_application {
 LOTUS_API_ENTRY ubyte lotus_app_init(lotus_application* instance, char* name);
 LOTUS_API_ENTRY void lotus_app_exit(lotus_application* instance);
 
-LOTUS_API_ENTRY ubyte lotus_app_make_window(lotus_application* instance, char* title, ubyte4 location[2], ubyte4 size[2]);
+LOTUS_API_ENTRY ubyte lotus_app_make_window(lotus_application* instance, char* title, ubyte4 size[2]);
 LOTUS_API_ENTRY void lotus_app_destroy_window(lotus_application* instance);
 
 LOTUS_API_ENTRY ubyte lotus_app_run(lotus_application* instance);

@@ -25,22 +25,33 @@ typedef struct lotus_platform_state {
     lotus_input_state* input_state;
 } lotus_platform_state;
 
-typedef struct lotus_window {
-    char title[256];
-    void* state;
-    ubyte4 size[2];
-    ubyte4 location[2];
+typedef struct lotus_window{
+    char title[256];       // Window title
+    int location[2];       // Window x, y position
+    int size[2];           // Window width and height
+    float aspect_ratio;    // Aspect ratio (width / height)
+    void* gl_context;      // Pointer to an OpenGL context
+    void* internal_data;   // Pointer to platform-specific window data
 } lotus_window;
 
-lotus_platform_state* lotus_platform_init(void);
-void lotus_platform_exit(void);
+// Platform Initialization
+lotus_platform_state* platform_init(void);
+void platform_exit(void);
 
-lotus_window lotus_platform_make_window(char* title, sbyte4 x, sbyte4 y, sbyte4 w, sbyte4 h);
-void lotus_platform_destroy_window(lotus_window* window);
+// Window Management
+lotus_window platform_create_window(const char* title, int width, int height);
+void platform_destroy_window(lotus_window* window);
 
-f64 lotus_platform_get_time(void);
-void lotus_platform_sleep(ubyte8 ms);
-ubyte lotus_platform_pump(void);
+// OpenGL Context Management
+bool platform_create_gl_context(lotus_window* window);
+void platform_destroy_gl_context(lotus_window* window);
 
-ubyte lotus_platform_make_glcontext(lotus_window* window);
-void lotus_platform_swap_buffers(lotus_window* window);
+// Platform events
+ubyte platform_pump(void);
+
+// Platform Time
+double platform_get_time(void);  // Returns time in seconds
+void platform_sleep(f64 seconds);  // Sleep for the specified duration
+
+// Swap Buffers
+void platform_swap_buffers(lotus_window* window);

@@ -35,6 +35,7 @@ void lotus_renderer_set_clear_color(f32 r, f32 g, f32 b, f32 a) {
 
 void lotus_renderer_set_shader(lotus_shader* shader) {
     internal_renderer_state.shader = (shader == NULL || shader->uniforms == NULL || shader->program < 0) ? NULL : shader;
+    lotus_set_uniform(*internal_renderer_state.shader, "u_projection", &internal_renderer_state.projection);
 }
 
 void lotus_renderer_submit(ubyte4 vbo, ubyte4 ebo, ubyte4 vao, lotus_mat4* matrix, ubyte4 index_count, ubyte4 vertex_count) {
@@ -63,21 +64,15 @@ void lotus_renderer_flush() {
         internal_renderer_state.clear_color.w
     ); lgl_clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    ubyte projection_set = 0;
-
     for (ubyte8 i = 0; i < internal_renderer_state.draws; ++i) {
         lotus_draw_buffer buf;
         lotus_pop_array(internal_renderer_state.queue, &buf);
 
         if (internal_renderer_state.shader) {
             lgl_use_program(internal_renderer_state.shader->program);
-
-            if (!projection_set) {
-                projection_set = 1;
-                lotus_set_uniform(*internal_renderer_state.shader, LOTUS_UNIFORM_MAT4, "u_projection", &internal_renderer_state.projection);
-            }
             
-            lotus_set_uniform(*internal_renderer_state.shader, LOTUS_UNIFORM_MAT4, "u_model", buf.matrix);
+            lotus_send_uniform(*internal_renderer_state.shader, LOTUS_UNIFORM_MAT4, "u_model");
+            lotus_send_uniform(*internal_renderer_state.shader, LOTUS_UNIFORM_MAT4, "u_projection");
         }
 
         lgl_bind_vertex_array(buf.handle[LOTUS_BUFFER_VAO]);
@@ -158,22 +153,22 @@ void lotus_destroy_shader(lotus_shader* shader) {
     lgl_delete_program(shader->program);
 }
 
-void lotus_set_uniform(lotus_shader program, lotus_uniform_type type, const char* name, void* value) {
-    sbyte4 location = lgl_get_uniform_location(program.program, name);
-    if (location < 0) return;
+void lotus_set_uniform(lotus_shader program, const char* name, void* value) { lotus_set_hashmap(program.uniforms, name, value); }
+
+void lotus_send_uniform(lotus_shader program, lotus_uniform_type type, const char* name) {
+    lotus_shader_uniform uniform = lotus_get_uniform(program, name);
+    if (uniform.location < 0) return;
     
     lgl_use_program(program.program);
     switch (type) {
         case LOTUS_UNIFORM_NONE: break;
         case LOTUS_UNIFORM_TYPES: break;
-        case LOTUS_UNIFORM_VEC2: lgl_uniform2fv(location, 1, value); break;
-        case LOTUS_UNIFORM_VEC3: lgl_uniform3fv(location, 1, value); break;
-        case LOTUS_UNIFORM_VEC4: lgl_uniform4fv(location, 1, value); break;
-        case LOTUS_UNIFORM_MAT4: lgl_uniform_matrix4fv(location, 1, 0, value); break;
+        case LOTUS_UNIFORM_VEC2: lgl_uniform2fv(uniform.location, 1, uniform.value); break;
+        case LOTUS_UNIFORM_VEC3: lgl_uniform3fv(uniform.location, 1, uniform.value); break;
+        case LOTUS_UNIFORM_VEC4: lgl_uniform4fv(uniform.location, 1, uniform.value); break;
+        case LOTUS_UNIFORM_MAT4: lgl_uniform_matrix4fv(uniform.location, 1, 0, uniform.value); break;
         default: break;
     }
-    
-    lotus_set_hashmap(program.uniforms, name, value);
 }
 
 lotus_shader_uniform lotus_get_uniform(lotus_shader program, const char* name) {

@@ -10,7 +10,7 @@ ubyte lotus_app_init(lotus_application* instance, char* name) {
 
     instance->info.name = name;
 
-    instance->state.platform = lotus_platform_init();
+    instance->state.platform = platform_init();
     if (!instance->state.platform) {
         lotus_log_fatal("Failed to initialize platform layer!");
     }
@@ -48,12 +48,12 @@ ubyte lotus_app_set_postframe(lotus_application* instance, lotus_postframe_callb
     return LOTUS_TRUE;
 }
 
-ubyte lotus_app_make_window(lotus_application* instance, char* title, ubyte4 location[2], ubyte4 size[2]) {
+ubyte lotus_app_make_window(lotus_application* instance, char* title, ubyte4 size[2]) {
     lotus_set_log_level(LOTUS_LOG_FATAL);
     if (!instance || !instance->state.running) return LOTUS_FALSE;
-    instance->resource.window = lotus_platform_make_window((title != NULL) ? title : instance->info.name, location[0], location[1], size[0], size[1]);
+    instance->resource.window = platform_create_window((title != NULL) ? title : instance->info.name, size[0], size[1]);
 
-    if (!lotus_platform_make_glcontext(&instance->resource.window)) {
+    if (!platform_create_gl_context(&instance->resource.window)) {
         lotus_log_fatal("Failed to create GL Context!");
         return LOTUS_FALSE;
     }
@@ -68,7 +68,8 @@ ubyte lotus_app_make_window(lotus_application* instance, char* title, ubyte4 loc
 
 void lotus_app_destroy_window(lotus_application* instance) {
     if (!instance || !instance->state.running) return;
-    lotus_platform_destroy_window(&instance->resource.window);
+    platform_destroy_window(&instance->resource.window);
+    platform_destroy_gl_context(&instance->resource.window);
 }
 
 ubyte lotus_app_run(lotus_application* instance) {
@@ -82,6 +83,8 @@ ubyte lotus_app_run(lotus_application* instance) {
             return result;
         }
         
+        // preframe logic
+        platform_pump();
         if (instance->preframe_callback != NULL) {
             result = instance->preframe_callback();
         }
@@ -92,9 +95,12 @@ ubyte lotus_app_run(lotus_application* instance) {
 
         result = instance->midframe_callback();
         
+        // postframe logic
         if (instance->postframe_callback != NULL) {
             result = instance->postframe_callback();
         }
+        platform_swap_buffers(&instance->resource.window);
+        lotus_input_update(0);
     }
 
     return result;
@@ -109,5 +115,5 @@ void lotus_app_exit(lotus_application* instance) {
     instance->postframe_callback = NULL;
     instance->fixedframe_callback = NULL;
     instance->state.running = LOTUS_FALSE;
-    lotus_platform_exit();
+    platform_exit();
 }

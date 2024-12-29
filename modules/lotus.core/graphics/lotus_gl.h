@@ -98,5 +98,6 @@ LOTUS_API_ENTRY void lotus_renderer_set_shader(lotus_shader* shader);
 LOTUS_API_ENTRY lotus_shader lotus_make_shader(const char* vertex_shader, const char* fragment_shader);
 LOTUS_API_ENTRY void lotus_destroy_shader(lotus_shader* shader);
 
-LOTUS_API_ENTRY void lotus_set_uniform(lotus_shader program, lotus_uniform_type type, const char* name, void* value);
+LOTUS_API_ENTRY void lotus_set_uniform(lotus_shader program, const char* name, void* value);
 LOTUS_API_ENTRY lotus_shader_uniform lotus_get_uniform(lotus_shader program, const char* name);
+LOTUS_API_ENTRY void lotus_send_uniform(lotus_shader program, lotus_uniform_type type, const char* name);
