@@ -1,6 +1,6 @@
 #define LOTUS_APPLICATION
 #define LOTUS_ECS
-#include "../../include/lotus.h"
+#include "../../lotus/include/lotus.h"
 
 char vShader[] = {
     "#version 460 core\n"

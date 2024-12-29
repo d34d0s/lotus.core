@@ -1,8 +1,8 @@
 {
     "compiler": "MinGW",
     "project": "Lotus",
-    "include_dirs": ["include", "modules/lotus.core/include"],
-    "source_dirs": ["modules/lotus.core/src"],
+    "include_dirs": ["lotus/include", "lotus/modules/lotus.core/include"],
+    "source_dirs": ["lotus/modules/lotus.core/src"],
     "defines": ["LOTUS_EXPORT"],
     "libraries": {
         "gdi32": null,

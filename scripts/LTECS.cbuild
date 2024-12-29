@@ -1,8 +1,8 @@
 {
     "compiler": "MinGW",
     "project": "LotusECS",
-    "include_dirs": ["include", "modules/lotus.ECS/include"],
-    "source_dirs": ["modules/lotus.ECS/src"],
+    "include_dirs": ["lotus/include", "lotus/modules/lotus.ECS/include"],
+    "source_dirs": ["lotus/modules/lotus.ECS/src"],
     "defines": ["LOTUS_EXPORT"],
     "libraries": { "Lotus": "build/lotus.core" },
     "output": "dll",
