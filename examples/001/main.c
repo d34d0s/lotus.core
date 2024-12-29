@@ -40,7 +40,6 @@ lotus_component_manager cm;
 lotus_entity e0;
 lotus_component e0_mesh;
 
-lotus_mat4 m_model;
 lotus_component e0_transform;
 
 ubyte my_callback(lotus_event data, ubyte2 event_code) {
@@ -62,10 +61,6 @@ ubyte4 midframe(void) {
         e0_transform.data.transform.location.z
     );
 
-    if (lotus_key_is_down(LOTUS_KEY_F12) || lotus_key_is_down(LOTUS_KEY_ESCAPE)) {
-        app.state.running = LOTUS_FALSE;
-    }
-
     if (lotus_key_is_down(LOTUS_KEY_A)) new_location.x -= speed;
     if (lotus_key_is_down(LOTUS_KEY_D)) new_location.x += speed;
     
@@ -73,11 +68,18 @@ ubyte4 midframe(void) {
     if (lotus_key_is_down(LOTUS_KEY_S)) new_location.y -= speed;
 
     // apply transforms before sending data to GPU
-    m_model = lotus_mul_mat4(m_model, lotus_trans_mat4(
+    lotus_mat4 m_translation = lotus_mul_mat4(lotus_identity(), lotus_trans_mat4(
         new_location.x,
         new_location.y,
         new_location.z
     ));
+
+    // update component data internally and then externally
+    lotus_set_component(&cm, (lotus_component){
+        .type = LOTUS_TRANSFORM_COMPONENT,
+        .data.transform.model = m_translation,
+        .data.transform.location = new_location,
+    }, e0); e0_transform = lotus_get_component(&cm, LOTUS_TRANSFORM_COMPONENT, e0);
 
     lotus_send_uniform(my_shader, LOTUS_UNIFORM_MAT4, "u_view");
 
@@ -85,7 +87,7 @@ ubyte4 midframe(void) {
         e0_mesh.data.mesh.vbo,
         e0_mesh.data.mesh.ebo,
         e0_mesh.data.mesh.vao,
-        &m_model,
+        &e0_transform.data.transform.model,
         e0_mesh.data.mesh.n_indices,
         e0_mesh.data.mesh.n_vertices
     );
@@ -102,7 +104,6 @@ void ecs_test() {
     lotus_init_ecs(&em, &cm);
 
     e0 = lotus_make_entity(&em);
-    printf("My First Entity: %d\n", e0);
 
     lotus_add_component(&cm, LOTUS_MESH_COMPONENT, e0);
     lotus_add_component(&cm, LOTUS_TRANSFORM_COMPONENT, e0);
@@ -141,15 +142,15 @@ int main() {
     lotus_register_event(LOTUS_EVENT_KEY_PRESSED, my_callback);
 
     my_shader = lotus_make_shader(vShader, fShader);
-    lotus_renderer_set_shader(&my_shader);
 
-    // set camera view matrix
+    // set view matrix
     m_view = lotus_look_at(eye, center, up);
-
-    m_model = lotus_identity();
-
     lotus_set_uniform(my_shader, "u_view", &m_view);
-    lotus_set_uniform(my_shader, "u_model", &m_model);
+    
+    // set model matrix
+    lotus_set_uniform(my_shader, "u_model", &e0_transform.data.transform.model);
+    
+    lotus_renderer_set_shader(&my_shader);
 
     lotus_app_run(&app);
 
