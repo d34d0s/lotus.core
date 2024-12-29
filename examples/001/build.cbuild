@@ -5,7 +5,8 @@
     "source_dirs": ["./"],
     "libraries": {
         "Lotus": "../../build/lotus.core",
-        "LotusECS": "../../build/lotus.ECS"
+        "LotusECS": "../../build/lotus.ECS",
+        "LotusSCENE": "../../build/lotus.SCENE"
     },
     "output": "exe",
     "output_dir": "build"

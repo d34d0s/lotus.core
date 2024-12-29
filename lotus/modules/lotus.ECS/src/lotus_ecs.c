@@ -1,9 +1,9 @@
 #include "../include/lotus_ecs.h"
 
-static lotus_mesh_data internal_mesh_data = {0};
-static lotus_transform_data internal_transform_data = {0};
+static Lotus_Mesh_Data internal_mesh_data = {0};
+static Lotus_Transform_Data internal_transform_data = {0};
 
-ubyte lotus_init_ecs(lotus_entity_manager* e_manager, lotus_component_manager* c_manager) {
+ubyte lotus_init_ecs(Lotus_Entity_Manager* e_manager, Lotus_Component_Manager* c_manager) {
     e_manager->next = 0;
     e_manager->count = 0;
 
@@ -30,7 +30,7 @@ ubyte lotus_init_ecs(lotus_entity_manager* e_manager, lotus_component_manager* c
     return LOTUS_TRUE;
 }
 
-void lotus_exit_ecs(lotus_entity_manager* e_manager, lotus_component_manager* c_manager) {
+void lotus_exit_ecs(Lotus_Entity_Manager* e_manager, Lotus_Component_Manager* c_manager) {
     e_manager->next = 0;
     e_manager->count = 0;
 
@@ -40,15 +40,15 @@ void lotus_exit_ecs(lotus_entity_manager* e_manager, lotus_component_manager* c_
     lotus_unregister_component(c_manager, LOTUS_TRANSFORM_COMPONENT);
 }
 
-lotus_entity lotus_make_entity(lotus_entity_manager* manager) {
+Lotus_Entity lotus_make_entity(Lotus_Entity_Manager* manager) {
     if (manager->count + 1 > LOTUS_ENTITY_MAX) return LOTUS_ENTITY_MAX + 1;
-    lotus_entity entity = manager->next++;
+    Lotus_Entity entity = manager->next++;
     manager->count++;
     manager->alive[entity] = 1;
     return entity;
 }
 
-ubyte lotus_kill_entity(lotus_entity_manager* manager, lotus_entity entity) {
+ubyte lotus_kill_entity(Lotus_Entity_Manager* manager, Lotus_Entity entity) {
     if (manager->count - 1 < 0) return 0;
     manager->next--;
     manager->count--;

@@ -2,13 +2,13 @@
 
 #include "../defines.h"
 
-typedef enum lotus_array_field {
+typedef enum Lotus_Array_Field {
     LOTUS_ARRAY_SIZE_FIELD = 0,
     LOTUS_ARRAY_STRIDE_FIELD,
     LOTUS_ARRAY_LENGTH_FIELD,
     LOTUS_ARRAY_CAPACITY_FIELD,
     LOTUS_ARRAY_FIELD_COUNT
-} lotus_array_field;
+} Lotus_Array_Field;
 
 #define LOTUS_ARRAY_HEADER_SIZE (4 * sizeof(ubyte4))
 #define LOTUS_ARRAY_GET_HEADER(array) ((ubyte4*)((char*)array - LOTUS_ARRAY_HEADER_SIZE))

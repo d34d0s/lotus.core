@@ -2,17 +2,17 @@
 
 #include "../defines.h"
 
-typedef enum lotus_mouse_button {
+typedef enum Lotus_Mouse_Button {
     LOTUS_MBUTTON_LEFT,
     LOTUS_MBUTTON_RIGHT,
     LOTUS_MBUTTON_MIDDLE,
     LOTUS_MBUTTON_MAX_BUTTONS
-} lotus_mouse_button;
+} Lotus_Mouse_Button;
 
 #define LOTUS_DEFINE_KEY(name, code) \
     LOTUS_KEY_##name = code
 
-typedef enum lotus_keyboard_key {
+typedef enum Lotus_Keyboard_Key {
     LOTUS_DEFINE_KEY(BACKSPACE, 0x08),
     LOTUS_DEFINE_KEY(ENTER, 0x0D),
     LOTUS_DEFINE_KEY(TAB, 0x09),
@@ -128,41 +128,41 @@ typedef enum lotus_keyboard_key {
     LOTUS_DEFINE_KEY(SLASH, 0xBF),
     LOTUS_DEFINE_KEY(GRAVE, 0xC0),
     LOTUS_MAX_KEYS
-} lotus_keyboard_key;
+} Lotus_Keyboard_Key;
 
-typedef struct _lotus_input_state {
+typedef struct _Lotus_Input_State {
     sbyte2 mouse[2];
     ubyte keys[256];
     ubyte buttons[LOTUS_MBUTTON_MAX_BUTTONS];
-} _lotus_input_state;
+} _Lotus_Input_State;
 
 #define LOTUS_INPUT_STATE_PREVIOUS 0
 #define LOTUS_INPUT_STATE_CURRENT 1
-typedef struct lotus_input_state {
+typedef struct Lotus_Input_State {
     ubyte init;
-    _lotus_input_state current;
-    _lotus_input_state previous;
-} lotus_input_state;
+    _Lotus_Input_State current;
+    _Lotus_Input_State previous;
+} Lotus_Input_State;
 
-lotus_input_state* lotus_input_init(void);
-void lotus_input_exit(void);
+Lotus_Input_State* lotus_init_input(void);
+void lotus_exit_input(void);
 
-void lotus_process_mouse_wheel(sbyte z_delotus_a);
-void lotus_process_mouse_move(sbyte2 x, sbyte2 y);
-void lotus_process_key(lotus_keyboard_key key, ubyte pressed);
-void lotus_process_button(lotus_mouse_button button, ubyte pressed);
+void lotus_process_key_input(Lotus_Keyboard_Key key, ubyte pressed);
+void lotus_process_mouse_wheel_input(sbyte z_delotus_a);
+void lotus_process_mouse_move_input(sbyte2 x, sbyte2 y);
+void lotus_process_mouse_button_input(Lotus_Mouse_Button button, ubyte pressed);
 
-LOTUS_API_ENTRY void lotus_input_update(f64 delta_time);
+LOTUS_API_ENTRY void lotus_update_input(f64 delta_time);
 
-LOTUS_API_ENTRY ubyte lotus_key_is_up(lotus_keyboard_key key);
-LOTUS_API_ENTRY ubyte lotus_key_was_up(lotus_keyboard_key key);
-LOTUS_API_ENTRY ubyte lotus_key_is_down(lotus_keyboard_key key);
-LOTUS_API_ENTRY ubyte lotus_key_was_down(lotus_keyboard_key key);
+LOTUS_API_ENTRY ubyte lotus_key_is_up(Lotus_Keyboard_Key key);
+LOTUS_API_ENTRY ubyte lotus_key_was_up(Lotus_Keyboard_Key key);
+LOTUS_API_ENTRY ubyte lotus_key_is_down(Lotus_Keyboard_Key key);
+LOTUS_API_ENTRY ubyte lotus_key_was_down(Lotus_Keyboard_Key key);
 
-LOTUS_API_ENTRY ubyte lotus_button_is_up(lotus_mouse_button button);
-LOTUS_API_ENTRY ubyte lotus_button_was_up(lotus_mouse_button button);
-LOTUS_API_ENTRY ubyte lotus_button_is_down(lotus_mouse_button button);
-LOTUS_API_ENTRY ubyte lotus_button_was_down(lotus_mouse_button button);
+LOTUS_API_ENTRY ubyte lotus_button_is_up(Lotus_Mouse_Button button);
+LOTUS_API_ENTRY ubyte lotus_button_was_up(Lotus_Mouse_Button button);
+LOTUS_API_ENTRY ubyte lotus_button_is_down(Lotus_Mouse_Button button);
+LOTUS_API_ENTRY ubyte lotus_button_was_down(Lotus_Mouse_Button button);
 
 LOTUS_API_ENTRY void lotus_mouse_get_position(sbyte4* x, sbyte4* y);
 LOTUS_API_ENTRY void lotus_mouse_get_last_position(sbyte4* x, sbyte4* y);

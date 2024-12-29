@@ -2,36 +2,36 @@
 
 #include "../include/platform/lotus_logger.h"
 
-lotus_allocator lotus_make_allocator(size_t heap_size) {
-    lotus_allocator alloc;
+Lotus_Allocator lotus_make_allocator(size_t heap_size) {
+    Lotus_Allocator alloc;
     
     alloc.heap_start = malloc(heap_size);
     if (alloc.heap_start == (void*)0) {
-        return (lotus_allocator){NULL};  // allocation failed
+        return (Lotus_Allocator){NULL};  // allocation failed
     }
 
     alloc.heap_size = heap_size;
-    alloc.free_list = (lotus_memory_itf*)alloc.heap_start;
+    alloc.free_list = (Lotus_Memory_Meta*)alloc.heap_start;
 
-    alloc.free_list->size = heap_size - sizeof(lotus_memory_itf);
+    alloc.free_list->size = heap_size - sizeof(Lotus_Memory_Meta);
     alloc.free_list->is_free = LOTUS_TRUE;
     alloc.free_list->next = NULL;
 
     return alloc;
 }
 
-lotus_memory lotus_alloc(lotus_allocator* alloc, size_t size, size_t alignment) {
-    lotus_memory_itf* current = alloc->free_list;
-    lotus_memory mem = { .ptr = NULL, .size = 0 };
+Lotus_Memory lotus_alloc(Lotus_Allocator* alloc, size_t size, size_t alignment) {
+    Lotus_Memory_Meta* current = alloc->free_list;
+    Lotus_Memory mem = { .ptr = NULL, .size = 0 };
 
     size = lotus_align(size, alignment);
 
     while (current) {
         if (current->is_free && current->size >= size) {
             // split block if theres extra space
-            if (current->size > size + sizeof(lotus_memory_itf)) {
-                lotus_memory_itf* new = (lotus_memory_itf*)((char*)current + size + sizeof(lotus_memory_itf));
-                new->size = current->size - size - sizeof(lotus_memory_itf);
+            if (current->size > size + sizeof(Lotus_Memory_Meta)) {
+                Lotus_Memory_Meta* new = (Lotus_Memory_Meta*)((char*)current + size + sizeof(Lotus_Memory_Meta));
+                new->size = current->size - size - sizeof(Lotus_Memory_Meta);
                 new->is_free = LOTUS_TRUE;
                 new->next = current->next;
 
@@ -39,7 +39,7 @@ lotus_memory lotus_alloc(lotus_allocator* alloc, size_t size, size_t alignment) 
                 current->next = new;
             }
             current->is_free = LOTUS_FALSE;
-            mem.ptr = (char*)current + sizeof(lotus_memory_itf);
+            mem.ptr = (char*)current + sizeof(Lotus_Memory_Meta);
             mem.size = current->size;
             return mem;
         }
@@ -49,16 +49,16 @@ lotus_memory lotus_alloc(lotus_allocator* alloc, size_t size, size_t alignment) 
     return mem;
 }
 
-void lotus_free(lotus_allocator* alloc, lotus_memory mem) {
-    lotus_memory_itf* block = (lotus_memory_itf*)((char*)mem.ptr - sizeof(lotus_memory_itf));
+void lotus_free(Lotus_Allocator* alloc, Lotus_Memory mem) {
+    Lotus_Memory_Meta* block = (Lotus_Memory_Meta*)((char*)mem.ptr - sizeof(Lotus_Memory_Meta));
     block->is_free = LOTUS_TRUE;
 
     // coalesce adjacent free blocks
-    lotus_memory_itf* current = alloc->free_list;
+    Lotus_Memory_Meta* current = alloc->free_list;
 
     while (current) {
         if (current->is_free && current->next && current->next->is_free) {
-            current->size += current->next->size + sizeof(lotus_memory_itf);
+            current->size += current->next->size + sizeof(Lotus_Memory_Meta);
             current->next = current->next->next;
         } else {
             current = current->next;
@@ -66,7 +66,7 @@ void lotus_free(lotus_allocator* alloc, lotus_memory mem) {
     }
 }
 
-void lotus_destroy_allocator(lotus_allocator* alloc) {
+void lotus_destroy_allocator(Lotus_Allocator* alloc) {
     free(alloc->heap_start);
     alloc->heap_start = NULL;
     alloc->heap_size = 0;

@@ -8,7 +8,7 @@
 #include "../../lotus.core/include/graphics/lotus_gl.h"
 #include "../../lotus.core/include/graphics/lotus_glapi.h"
 
-ubyte _lotus_init_mesh_data(lotus_mesh_data* data) {
+ubyte _lotus_init_mesh_data(Lotus_Mesh_Data* data) {
     data->attrs = (ubyte*)lotus_make_array(sizeof(ubyte), LOTUS_ENTITY_MAX);
     data->vbo = (ubyte4*)lotus_make_array(sizeof(ubyte4), LOTUS_ENTITY_MAX);
     data->ebo = (ubyte4*)lotus_make_array(sizeof(ubyte4), LOTUS_ENTITY_MAX);
@@ -21,7 +21,7 @@ ubyte _lotus_init_mesh_data(lotus_mesh_data* data) {
     return LOTUS_TRUE;
 }
 
-void _lotus_destroy_mesh_data(lotus_mesh_data* data) {
+void _lotus_destroy_mesh_data(Lotus_Mesh_Data* data) {
     lotus_destroy_array(data->attrs);
     lotus_destroy_array(data->vbo);
     lotus_destroy_array(data->ebo);
@@ -40,7 +40,7 @@ void _lotus_destroy_mesh_data(lotus_mesh_data* data) {
     data->indices = NULL;
 }
 
-ubyte _lotus_validate_mesh_data(lotus_mesh_data* data) {
+ubyte _lotus_validate_mesh_data(Lotus_Mesh_Data* data) {
     return (
         data->attrs == NULL         ||
         data->vbo == NULL           ||
@@ -53,8 +53,8 @@ ubyte _lotus_validate_mesh_data(lotus_mesh_data* data) {
     ) ? LOTUS_FALSE : LOTUS_TRUE;
 }
 
-void _increment_mesh_data_arrays(lotus_mesh_data* data, ubyte4 count) {
-    lotus_mesh_data* mesh_data = (lotus_mesh_data*)data;
+void _increment_mesh_data_arrays(Lotus_Mesh_Data* data, ubyte4 count) {
+    Lotus_Mesh_Data* mesh_data = (Lotus_Mesh_Data*)data;
     if (!_lotus_validate_mesh_data(mesh_data)) return;
 
     LOTUS_ARRAY_SET_HEADER_FIELD(mesh_data->attrs, LOTUS_ARRAY_LENGTH_FIELD, count);
@@ -67,8 +67,8 @@ void _increment_mesh_data_arrays(lotus_mesh_data* data, ubyte4 count) {
     LOTUS_ARRAY_SET_HEADER_FIELD(mesh_data->indices, LOTUS_ARRAY_LENGTH_FIELD, count);
 }
 
-void _lotus_add_mesh(void* data, lotus_entity entity) {
-    lotus_mesh_data* mesh_data = (lotus_mesh_data*)data;
+void _lotus_add_mesh(void* data, Lotus_Entity entity) {
+    Lotus_Mesh_Data* mesh_data = (Lotus_Mesh_Data*)data;
     if (!_lotus_validate_mesh_data(mesh_data)) return;
     ubyte4 count = LOTUS_ARRAY_GET_HEADER_FIELD(mesh_data->attrs, LOTUS_ARRAY_LENGTH_FIELD);
     _increment_mesh_data_arrays(mesh_data, count+1);
@@ -85,8 +85,8 @@ void _lotus_add_mesh(void* data, lotus_entity entity) {
     mesh_data->indices[entity] = NULL;
 }
 
-void _lotus_rem_mesh(void* data, lotus_entity entity) {
-    lotus_mesh_data* mesh_data = (lotus_mesh_data*)data;
+void _lotus_rem_mesh(void* data, Lotus_Entity entity) {
+    Lotus_Mesh_Data* mesh_data = (Lotus_Mesh_Data*)data;
     if (!_lotus_validate_mesh_data(mesh_data)) return;
     ubyte4 count = LOTUS_ARRAY_GET_HEADER_FIELD(mesh_data->attrs, LOTUS_ARRAY_LENGTH_FIELD);
     _increment_mesh_data_arrays(mesh_data, count-1);
@@ -108,8 +108,8 @@ void _lotus_rem_mesh(void* data, lotus_entity entity) {
     mesh_data->indices[entity] = NULL;
 }
 
-void _lotus_set_mesh(void* data, lotus_component component, lotus_entity entity) {
-    lotus_mesh_data* mesh_data = (lotus_mesh_data*)data;
+void _lotus_set_mesh(void* data, Lotus_Component component, Lotus_Entity entity) {
+    Lotus_Mesh_Data* mesh_data = (Lotus_Mesh_Data*)data;
     if (!_lotus_validate_mesh_data(mesh_data) || component.type != LOTUS_MESH_COMPONENT) return;
 
     if (component.type == LOTUS_MESH_COMPONENT) {
@@ -186,11 +186,11 @@ void _lotus_set_mesh(void* data, lotus_component component, lotus_entity entity)
     } else { return; }
 }
 
-lotus_component _lotus_get_mesh(void* data, lotus_entity entity) {
-    lotus_mesh_data* mesh_data = (lotus_mesh_data*)data;
-    if (!_lotus_validate_mesh_data(mesh_data)) return (lotus_component){ .type = LOTUS_COMPONENT_MAX+1 };
+Lotus_Component _lotus_get_mesh(void* data, Lotus_Entity entity) {
+    Lotus_Mesh_Data* mesh_data = (Lotus_Mesh_Data*)data;
+    if (!_lotus_validate_mesh_data(mesh_data)) return (Lotus_Component){ .type = LOTUS_COMPONENT_MAX+1 };
     
-    return (lotus_component){
+    return (Lotus_Component){
         .type = LOTUS_MESH_COMPONENT,
         .data.mesh.attrs = mesh_data->attrs[entity],
         .data.mesh.vbo = mesh_data->vbo[entity],

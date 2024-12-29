@@ -1,5 +1,4 @@
-#define LOTUS_APPLICATION
-#define LOTUS_ECS
+#define LOTUS_SCENE
 #include "../../lotus/include/lotus.h"
 
 char vShader[] = {
@@ -24,25 +23,22 @@ char fShader[] = {
     "   frag_color = vec4(vertex_color, 1.0f);\n"
     "}\0"
 };
-lotus_shader my_shader;
+Lotus_Shader my_shader;
 
-// camera-data handled manually until implementation :)
-lotus_mat4 m_view;
-lotus_vec3 up = {0.0f, 1.0f, 0.0f};
-lotus_vec3 eye = {0.0f, 0.0f, 1.0f};
-lotus_vec3 center = {0.0f, 0.0f, 0.0f};
+// camera-data handled manually until implscene.entity_namagerentation :)
+Lotus_Mat4 m_view;
+Lotus_Vec3 up = {0.0f, 1.0f, 0.0f};
+Lotus_Vec3 eye = {0.0f, 0.0f, 1.0f};
+Lotus_Vec3 center = {0.0f, 0.0f, 0.0f};
 
-lotus_application app;
+Lotus_Scene scene;
 
-lotus_entity_manager em;
-lotus_component_manager cm;
+Lotus_Entity e0;
+Lotus_Component e0_mesh;
 
-lotus_entity e0;
-lotus_component e0_mesh;
+Lotus_Component e0_transform;
 
-lotus_component e0_transform;
-
-ubyte my_callback(lotus_event data, ubyte2 event_code) {
+ubyte my_callback(Lotus_Event data, ubyte2 event_code) {
     if (event_code == LOTUS_EVENT_KEY_PRESSED) {
         printf("Pressed A Key!\n");
     }
@@ -55,7 +51,7 @@ ubyte4 preframe(void) {
 
 ubyte4 midframe(void) {
     f32 speed = 0.01;
-    lotus_vec3 new_location = lotus_new_vec3(
+    Lotus_Vec3 new_location = lotus_new_vec3(
         e0_transform.data.transform.location.x,
         e0_transform.data.transform.location.y,
         e0_transform.data.transform.location.z
@@ -67,23 +63,23 @@ ubyte4 midframe(void) {
     if (lotus_key_is_down(LOTUS_KEY_W)) new_location.y += speed;
     if (lotus_key_is_down(LOTUS_KEY_S)) new_location.y -= speed;
 
-    // apply transforms before sending data to GPU
-    lotus_mat4 m_translation = lotus_mul_mat4(lotus_identity(), lotus_trans_mat4(
+    // scene.applicationly transforms before sending data to GPU
+    Lotus_Mat4 m_translation = lotus_mul_mat4(lotus_identity(), lotus_trans_mat4(
         new_location.x,
         new_location.y,
         new_location.z
     ));
 
     // update component data internally and then externally
-    lotus_set_component(&cm, (lotus_component){
+    lotus_set_component(&scene.component_manager, (Lotus_Component){
         .type = LOTUS_TRANSFORM_COMPONENT,
         .data.transform.model = m_translation,
         .data.transform.location = new_location,
-    }, e0); e0_transform = lotus_get_component(&cm, LOTUS_TRANSFORM_COMPONENT, e0);
+    }, e0); e0_transform = lotus_get_component(&scene.component_manager, LOTUS_TRANSFORM_COMPONENT, e0);
 
-    lotus_send_uniform(my_shader, LOTUS_UNIFORM_MAT4, "u_view");
+    lotus_send_shader_uniform(my_shader, LOTUS_UNIFORM_MAT4, "u_view");
 
-    lotus_renderer_submit(
+    lotus_draw_submit(
         e0_mesh.data.mesh.vbo,
         e0_mesh.data.mesh.ebo,
         e0_mesh.data.mesh.vao,
@@ -96,20 +92,18 @@ ubyte4 midframe(void) {
 }
 
 ubyte4 postframe(void) {
-    lotus_renderer_flush();
+    lotus_draw_flush();
     return LOTUS_TRUE;
 }
 
 void ecs_test() {
-    lotus_init_ecs(&em, &cm);
+    e0 = lotus_make_entity(&scene.entity_namager);
 
-    e0 = lotus_make_entity(&em);
+    lotus_add_component(&scene.component_manager, LOTUS_MESH_COMPONENT, e0);
+    lotus_add_component(&scene.component_manager, LOTUS_TRANSFORM_COMPONENT, e0);
 
-    lotus_add_component(&cm, LOTUS_MESH_COMPONENT, e0);
-    lotus_add_component(&cm, LOTUS_TRANSFORM_COMPONENT, e0);
-
-    lotus_set_component(&cm, 
-        (lotus_component){ 
+    lotus_set_component(&scene.component_manager, 
+        (Lotus_Component){ 
             .type = LOTUS_MESH_COMPONENT, 
             .data.mesh.attrs = LOTUS_LOCATION_ATTR | LOTUS_COLOR_ATTR,
             .data.mesh.n_vertices = 3,
@@ -121,23 +115,21 @@ void ecs_test() {
         }, e0
     );
 
-    e0_mesh = lotus_get_component(&cm, LOTUS_MESH_COMPONENT, e0);
-    e0_transform = lotus_get_component(&cm, LOTUS_TRANSFORM_COMPONENT, e0);
+    e0_mesh = lotus_get_component(&scene.component_manager, LOTUS_MESH_COMPONENT, e0);
+    e0_transform = lotus_get_component(&scene.component_manager, LOTUS_TRANSFORM_COMPONENT, e0);
 }
 
 int main() {
-    lotus_app_init(&app, "Lotus Application");
-    lotus_app_make_window(&app, "Lotus Window", LOTUS_VEC2(ubyte4, 1280, 720));
-    
-    lotus_renderer_init();
-    lotus_renderer_begin(LOTUS_TRIANGLE_MODE, 133, 161, 172, 255, lotus_perspective(lotus_to_radians(45.0), 1280/720, 0.1, 1000.0));
-    // lotus_renderer_begin(LOTUS_TRIANGLE_MODE, 133, 161, 172, 255, lotus_ortho(0, 1, 0, 1, 0.1, 10));
+    scene = lotus_init_scene("My Scene", "My Application", LOTUS_VEC2(ubyte4, 1280, 720));
+
+    lotus_draw_begin(LOTUS_TRIANGLE_MODE, 133, 161, 172, 255, lotus_perspective(lotus_to_radians(45.0), 1280/720, 0.1, 1000.0));
+    // lotus_draw_begin(LOTUS_TRIANGLE_MODE, 133, 161, 172, 255, lotus_ortho(0, 1, 0, 1, 0.1, 10));
 
     ecs_test();
 
-    lotus_app_set_preframe(&app, preframe);
-    lotus_app_set_midframe(&app, midframe);
-    lotus_app_set_postframe(&app, postframe);
+    lotus_set_application_preframe(&scene.application, preframe);
+    lotus_set_application_midframe(&scene.application, midframe);
+    lotus_set_application_postframe(&scene.application, postframe);
 
     lotus_register_event(LOTUS_EVENT_KEY_PRESSED, my_callback);
 
@@ -145,21 +137,17 @@ int main() {
 
     // set view matrix
     m_view = lotus_look_at(eye, center, up);
-    lotus_set_uniform(my_shader, "u_view", &m_view);
+    lotus_set_shader_uniform(my_shader, "u_view", &m_view);
     
     // set model matrix
-    lotus_set_uniform(my_shader, "u_model", &e0_transform.data.transform.model);
+    lotus_set_shader_uniform(my_shader, "u_model", &e0_transform.data.transform.model);
     
-    lotus_renderer_set_shader(&my_shader);
+    lotus_set_renderer_shader(&my_shader);
 
-    lotus_app_run(&app);
+    lotus_run_application(&scene.application);
 
-    lotus_rem_component(&cm, LOTUS_MESH_COMPONENT, e0);
-    lotus_exit_ecs(&em, &cm);
+    lotus_rem_component(&scene.component_manager, LOTUS_MESH_COMPONENT, e0);
     
-    lotus_renderer_destroy();
-    
-    lotus_app_destroy_window(&app);
-    lotus_app_exit(&app);
+    lotus_destroy_scene(&scene);
     return 0;
 }

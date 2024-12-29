@@ -4,7 +4,7 @@
     "include_dirs": ["lotus/include", "lotus/modules/lotus.ECS/include"],
     "source_dirs": ["lotus/modules/lotus.ECS/src"],
     "defines": ["LOTUS_EXPORT"],
-    "libraries": { "Lotus": "build/lotus.core" },
+    "libraries": { "Lotus": "build/lotus.CORE" },
     "output": "dll",
     "output_dir": "build/lotus.ECS"
 }

@@ -5,22 +5,22 @@
 #include <Windows.h>
 #include <windowsx.h>   // parameter input extraction
 
-typedef struct platform_window_data {
+typedef struct Platform_Window_Data {
     HWND handle;
     HGLRC gl_context;
     HDC device_context;
     HINSTANCE instance;
-} platform_window_data;
+} Platform_Window_Data;
 
-static lotus_platform_state internal_platform_state = {0};
+static Lotus_Platform_State internal_platform_state = {0};
 
-lotus_platform_state* platform_init(void) {
+Lotus_Platform_State* lotus_init_platform(void) {
     internal_platform_state.platform = LOTUS_WINDOWS_TAG;
     
     internal_platform_state.state = NULL;
     
     internal_platform_state.event_state = lotus_init_event();
-    internal_platform_state.input_state = lotus_input_init();
+    internal_platform_state.input_state = lotus_init_input();
 
     LARGE_INTEGER frequency;
     QueryPerformanceFrequency(&frequency);
@@ -29,9 +29,9 @@ lotus_platform_state* platform_init(void) {
     return &internal_platform_state;
 }
 
-void platform_exit(void) {
+void lotus_exit_platform(void) {
     lotus_exit_event();
-    lotus_input_exit();
+    lotus_exit_input();
     internal_platform_state.state = NULL;
     return;
 }
@@ -42,7 +42,7 @@ LRESULT CALLBACK _window_proc(HWND handle, ubyte4 msg, WPARAM w, LPARAM l) {
         case WM_QUIT:       // fall through WM_DESTROY
         case WM_CLOSE:      // fall through WM_DESTROY
         case WM_DESTROY:
-            lotus_push_event((lotus_event){.data.ubyte[0]=1}, LOTUS_EVENT_APP_QUIT);
+            lotus_push_event((Lotus_Event){.data.ubyte[0]=1}, LOTUS_EVENT_APP_QUIT);
             PostQuitMessage(0);
             return 0;
         case WM_SIZE: {
@@ -51,29 +51,29 @@ LRESULT CALLBACK _window_proc(HWND handle, ubyte4 msg, WPARAM w, LPARAM l) {
             ubyte2 w = r.right - r.left;
             ubyte2 h = r.bottom - r.top;
             // TODO: handle resize event with resize callback
-            lotus_push_event((lotus_event){.data.ubyte2[0]=w, .data.ubyte2[1]=h}, LOTUS_EVENT_RESIZE);
+            lotus_push_event((Lotus_Event){.data.ubyte2[0]=w, .data.ubyte2[1]=h}, LOTUS_EVENT_RESIZE);
         } break;
         case WM_KEYUP:          // fall trough WM_SYSKEYUP
         case WM_KEYDOWN:        // fall trough WM_SYSKEYUP
         case WM_SYSKEYDOWN:     // fall trough WM_SYSKEYUP
         case WM_SYSKEYUP: {
             // key pressed/released
-            lotus_keyboard_key key = (ubyte2)w;
+            Lotus_Keyboard_Key key = (ubyte2)w;
             ubyte pressed = (msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN);
-            lotus_process_key(key, pressed);
+            lotus_process_key_input(key, pressed);
         } break;
         case WM_MOUSEMOVE: {
             // mouse movement
             sbyte4 x = GET_X_LPARAM(l); 
             sbyte4 y = GET_Y_LPARAM(l);
-            lotus_process_mouse_move(x, y);
+            lotus_process_mouse_move_input(x, y);
         } break;
         case WM_MOUSEWHEEL: {
             sbyte4 z = GET_WHEEL_DELTA_WPARAM(w);
             if (z != 0) {
                 // clamp input to OS-independent values (-1, 1)
                 z = (z < 0) ? -1 : 1;
-                lotus_process_mouse_wheel(z);
+                lotus_process_mouse_wheel_input(z);
             }
         } break;
         case WM_LBUTTONDOWN:    // fall trough WM_RBUTTONUP
@@ -82,7 +82,7 @@ LRESULT CALLBACK _window_proc(HWND handle, ubyte4 msg, WPARAM w, LPARAM l) {
         case WM_LBUTTONUP:      // fall trough WM_RBUTTONUP
         case WM_MBUTTONUP:      // fall trough WM_RBUTTONUP
         case WM_RBUTTONUP: {
-            lotus_mouse_button button = LOTUS_MBUTTON_MAX_BUTTONS;
+            Lotus_Mouse_Button button = LOTUS_MBUTTON_MAX_BUTTONS;
             ubyte pressed = msg == WM_LBUTTONDOWN || msg == WM_RBUTTONDOWN || msg == WM_MBUTTONDOWN;
             switch (msg) {
                 case WM_LBUTTONDOWN:
@@ -100,21 +100,21 @@ LRESULT CALLBACK _window_proc(HWND handle, ubyte4 msg, WPARAM w, LPARAM l) {
                     button = LOTUS_MBUTTON_RIGHT;
                     break;
             }
-            if (button != LOTUS_MBUTTON_MAX_BUTTONS) lotus_process_button(button, pressed);
+            if (button != LOTUS_MBUTTON_MAX_BUTTONS) lotus_process_mouse_button_input(button, pressed);
         } break;
     }
     
     return DefWindowProcA(handle, msg, w, l);
 }
 
-lotus_window platform_create_window(const char* title, int width, int height) {
-    lotus_window window;
+Lotus_Window lotus_create_platform_window(const char* title, int width, int height) {
+    Lotus_Window window;
 
-    window.internal_data = (platform_window_data*)malloc(sizeof(platform_window_data));
+    window.internal_data = (Platform_Window_Data*)malloc(sizeof(Platform_Window_Data));
     if (!window.internal_data) {
-        return (lotus_window){0};
+        return (Lotus_Window){0};
     }
-    platform_window_data* data = (platform_window_data*)window.internal_data;
+    Platform_Window_Data* data = (Platform_Window_Data*)window.internal_data;
 
     // Register window class
     WNDCLASS wc = {0};
@@ -123,7 +123,7 @@ lotus_window platform_create_window(const char* title, int width, int height) {
     wc.lpszClassName = "Lotus Window Class";
 
     if (!RegisterClass(&wc)) {
-        return (lotus_window){0};
+        return (Lotus_Window){0};
     }
 
     // Create the window
@@ -141,7 +141,7 @@ lotus_window platform_create_window(const char* title, int width, int height) {
         NULL);
 
     if (!hwnd) {
-        return (lotus_window){0};
+        return (Lotus_Window){0};
     }
 
     data->handle = hwnd;
@@ -161,9 +161,9 @@ lotus_window platform_create_window(const char* title, int width, int height) {
     return window;
 }
 
-void platform_destroy_window(lotus_window* window) {
+void lotus_destroy_platform_window(Lotus_Window* window) {
     if (window && window->internal_data) {
-        platform_window_data* data = (platform_window_data*)window->internal_data;
+        Platform_Window_Data* data = (Platform_Window_Data*)window->internal_data;
         if (data->handle) {
             DestroyWindow(data->handle);
         }
@@ -172,13 +172,13 @@ void platform_destroy_window(lotus_window* window) {
     }
 }
 
-bool platform_create_gl_context(lotus_window* window) {
+bool lotus_create_platform_gl_context(Lotus_Window* window) {
     if (!window || !window->internal_data) {
         printf("window_ptr/window->internal_data_ptr invalid!\n");
         return false;
     }
 
-    platform_window_data* data = (platform_window_data*)window->internal_data;
+    Platform_Window_Data* data = (Platform_Window_Data*)window->internal_data;
 
     PIXELFORMATDESCRIPTOR pfd = {
         sizeof(PIXELFORMATDESCRIPTOR),
@@ -218,10 +218,10 @@ bool platform_create_gl_context(lotus_window* window) {
     return true;
 }
 
-void platform_destroy_gl_context(lotus_window* window) {
+void lotus_destroy_platform_gl_context(Lotus_Window* window) {
     if (!window || !window->internal_data) return;
 
-    platform_window_data* data = (platform_window_data*)window->internal_data;
+    Platform_Window_Data* data = (Platform_Window_Data*)window->internal_data;
     if (data->gl_context) {
         wglMakeCurrent(NULL, NULL);
         wglDeleteContext(data->gl_context);
@@ -230,24 +230,24 @@ void platform_destroy_gl_context(lotus_window* window) {
     }
 }
 
-double platform_get_time() {
+double lotus_get_platform_time() {
     LARGE_INTEGER counter;
     QueryPerformanceCounter(&counter);
     return (double)counter.QuadPart / internal_platform_state.clock_frequency;
 }
 
-void platform_sleep(f64 seconds) {
+void lotus_sleep_platform(f64 seconds) {
     Sleep((DWORD)(seconds * 1000.0));
 }
 
-void platform_swap_buffers(lotus_window* window) {
+void lotus_swap_platform_buffers(Lotus_Window* window) {
     if (!window || !window->internal_data) return;
 
-    platform_window_data* data = (platform_window_data*)window->internal_data;
+    Platform_Window_Data* data = (Platform_Window_Data*)window->internal_data;
     SwapBuffers(data->device_context);
 }
 
-ubyte platform_pump(void) {
+ubyte lotus_pump_platform_messages(void) {
     MSG message;
     while(PeekMessageA(&message, NULL, 0, 0, PM_REMOVE)) {
         TranslateMessage(&message);

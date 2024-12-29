@@ -6,52 +6,52 @@
 #include "lotus_event.h"
 #include "lotus_input.h"
 
-typedef enum lotus_platform_tag {
+typedef enum Lotus_Platform_Tag {
     LOTUS_WINDOWS_TAG,
     LOTUS_MACOS_TAG,
     LOTUS_PLATFORM_TAGS
-} lotus_platform_tag;
+} Lotus_Platform_Tag;
 
-typedef struct lotus_dll {
+typedef struct Lotus_Dll {
     char* name;
     void* module;
-} lotus_dll;
+} Lotus_Dll;
 
-typedef struct lotus_platform_state {
+typedef struct Lotus_Platform_State {
     void* state;
     f64 clock_frequency;
-    lotus_platform_tag platform;
-    lotus_event_state* event_state;
-    lotus_input_state* input_state;
-} lotus_platform_state;
+    Lotus_Platform_Tag platform;
+    Lotus_Event_State* event_state;
+    Lotus_Input_State* input_state;
+} Lotus_Platform_State;
 
-typedef struct lotus_window{
+typedef struct Lotus_Window{
     char title[256];       // Window title
     int location[2];       // Window x, y position
     int size[2];           // Window width and height
     float aspect_ratio;    // Aspect ratio (width / height)
     void* gl_context;      // Pointer to an OpenGL context
     void* internal_data;   // Pointer to platform-specific window data
-} lotus_window;
+} Lotus_Window;
 
 // Platform Initialization
-lotus_platform_state* platform_init(void);
-void platform_exit(void);
+Lotus_Platform_State* lotus_init_platform(void);
+void lotus_exit_platform(void);
 
 // Window Management
-lotus_window platform_create_window(const char* title, int width, int height);
-void platform_destroy_window(lotus_window* window);
+Lotus_Window lotus_create_platform_window(const char* title, int width, int height);
+void lotus_destroy_platform_window(Lotus_Window* window);
 
 // OpenGL Context Management
-bool platform_create_gl_context(lotus_window* window);
-void platform_destroy_gl_context(lotus_window* window);
+bool lotus_create_platform_gl_context(Lotus_Window* window);
+void lotus_destroy_platform_gl_context(Lotus_Window* window);
 
 // Platform events
-ubyte platform_pump(void);
+ubyte lotus_pump_platform_messages(void);
 
 // Platform Time
-double platform_get_time(void);  // Returns time in seconds
-void platform_sleep(f64 seconds);  // Sleep for the specified duration
+double lotus_get_platform_time(void);  // Returns time in seconds
+void lotus_sleep_platform(f64 seconds);  // Sleep for the specified duration
 
 // Swap Buffers
-void platform_swap_buffers(lotus_window* window);
+void lotus_swap_platform_buffers(Lotus_Window* window);

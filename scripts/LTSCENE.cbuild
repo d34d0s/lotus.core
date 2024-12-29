@@ -1,0 +1,13 @@
+{
+    "compiler": "MinGW",
+    "project": "LotusSCENE",
+    "include_dirs": ["lotus/include", "lotus/modules/lotus.CORE/include", "lotus/modules/lotus.SCENE/include"],
+    "source_dirs": ["lotus/modules/lotus.SCENE/src"],
+    "defines": ["LOTUS_EXPORT"],
+    "libraries": { 
+        "Lotus": "build/lotus.CORE",
+        "LotusECS": "build/lotus.ECS"
+    },
+    "output": "dll",
+    "output_dir": "build/lotus.SCENE"
+}

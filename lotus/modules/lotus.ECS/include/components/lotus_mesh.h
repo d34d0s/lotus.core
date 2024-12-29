@@ -2,15 +2,15 @@
 
 #include "../lotus_ecs_types.h"
 
-typedef enum lotus_vertex_attr {
+typedef enum Lotus_Vertex_Attribute {
     LOTUS_LOCATION_ATTR = 1 << 0, // 1 (0b0001)
     LOTUS_COLOR_ATTR    = 1 << 1, // 2 (0b0010)
     LOTUS_TCOORD_ATTR   = 1 << 2, // 4 (0b0100)
     LOTUS_NORMAL_ATTR   = 1 << 3, // 8 (0b1000)
     LOTUS_VERTEX_ATTRIBS  = 1 << 4 
-} lotus_vertex_attr;
+} Lotus_Vertex_Attribute;
 
-typedef struct lotus_mesh_component {
+typedef struct Lotus_Mesh {
     ubyte attrs;
     ubyte4 vbo;
     ubyte4 ebo;
@@ -19,9 +19,9 @@ typedef struct lotus_mesh_component {
     ubyte4 n_indices;
     f32* vertices;
     ubyte4* indices;
-} lotus_mesh_component;
+} Lotus_Mesh;
 
-typedef struct lotus_mesh_data {
+typedef struct Lotus_Mesh_Data {
     ubyte* attrs;
     ubyte4* vbo;
     ubyte4* ebo;
@@ -30,12 +30,12 @@ typedef struct lotus_mesh_data {
     ubyte4* n_indices;
     f32** vertices;   // raw floating-point vertex data
     ubyte4** indices;
-} lotus_mesh_data;
+} Lotus_Mesh_Data;
 
-ubyte _lotus_init_mesh_data(lotus_mesh_data* data);
-void _lotus_destroy_mesh_data(lotus_mesh_data* data);
+ubyte _lotus_init_mesh_data(Lotus_Mesh_Data* data);
+void _lotus_destroy_mesh_data(Lotus_Mesh_Data* data);
 
-void _lotus_add_mesh(void* data, lotus_entity entity);
-void _lotus_rem_mesh(void* data, lotus_entity entity);
-void _lotus_set_mesh(void* data, lotus_component component, lotus_entity entity);
-lotus_component _lotus_get_mesh(void* data, lotus_entity entity);
+void _lotus_add_mesh(void* data, Lotus_Entity entity);
+void _lotus_rem_mesh(void* data, Lotus_Entity entity);
+void _lotus_set_mesh(void* data, Lotus_Component component, Lotus_Entity entity);
+Lotus_Component _lotus_get_mesh(void* data, Lotus_Entity entity);

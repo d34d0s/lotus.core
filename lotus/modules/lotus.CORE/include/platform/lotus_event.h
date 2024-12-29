@@ -6,11 +6,11 @@
 
 #define LOTUS_EVENT_CODE_MAX 16384
 
-typedef struct lotus_event lotus_event;
-typedef ubyte (*lotus_callback)(lotus_event data, ubyte2 event_code);
+typedef struct Lotus_Event Lotus_Event;
+typedef ubyte (*Lotus_Callback)(Lotus_Event data, ubyte2 event_code);
 
 // internal event codes. user application should use codes > 255.
-typedef enum lotus_event_code {
+typedef enum Lotus_Event_Code {
     // shuts down the application on the next frame.
     LOTUS_EVENT_APP_QUIT = 0x01,
 
@@ -60,10 +60,10 @@ typedef enum lotus_event_code {
     LOTUS_EVENT_RESIZE = 0x08,
 
     LOTUS_EVENT_MAX = 0xFF
-} lotus_event_code;
+} Lotus_Event_Code;
 
-struct lotus_event {
-    lotus_callback callback;
+struct Lotus_Event {
+    Lotus_Callback callback;
     // 128 byte maximum
     union data {
         sbyte8 sbyte8[2];
@@ -83,17 +83,17 @@ struct lotus_event {
     } data;    
 };
 
-typedef struct lotus_event_register {
-    lotus_event* events;
-} lotus_event_register;
+typedef struct Lotus_Event_Register {
+    Lotus_Event* events;
+} Lotus_Event_Register;
 
-typedef struct lotus_event_state {
+typedef struct Lotus_Event_State {
     ubyte init;
     // event code lookup-table.
-    lotus_event_register registered[LOTUS_EVENT_CODE_MAX];
-} lotus_event_state;
+    Lotus_Event_Register registered[LOTUS_EVENT_CODE_MAX];
+} Lotus_Event_State;
 
-lotus_event_state* lotus_init_event();
+Lotus_Event_State* lotus_init_event();
 void lotus_exit_event();
 
 /**
@@ -104,7 +104,7 @@ void lotus_exit_event();
  * @param sender A pointer to the sender can be 0/NULL.
  * @returns `LOTUS_TRUE` if handles; otherwise `LOTUS_FALSE`
  */
-LOTUS_API_ENTRY ubyte lotus_push_event(lotus_event data, ubyte2 event_code);
+LOTUS_API_ENTRY ubyte lotus_push_event(Lotus_Event data, ubyte2 event_code);
 
 /**
  * Register to listen for when events are sent with the specified event code. Events with duplicate
@@ -114,7 +114,7 @@ LOTUS_API_ENTRY ubyte lotus_push_event(lotus_event data, ubyte2 event_code);
  * @param onEvent The callback function pointer to be invoked when the event code is pushed.
  * @returns `LOTUS_TRUE` if the event is successfully registered; otherwise `LOTUS_FALSE`.
  */
-LOTUS_API_ENTRY ubyte lotus_register_event(ubyte2 event_code, lotus_callback onEvent);
+LOTUS_API_ENTRY ubyte lotus_register_event(ubyte2 event_code, Lotus_Callback onEvent);
 
 /**
  * Unregister from listening for when events are sent with the specified event code. If no matching
@@ -124,5 +124,5 @@ LOTUS_API_ENTRY ubyte lotus_register_event(ubyte2 event_code, lotus_callback onE
  * @param onEvent The callback function pointer to be unregistered.
  * @returns `LOTUS_TRUE` if the event is successfully unregistered; otherwise `LOTUS_FALSE`.
  */
-LOTUS_API_ENTRY ubyte lotus_unregister_event(ubyte2 event_code, lotus_callback onEvent);
+LOTUS_API_ENTRY ubyte lotus_unregister_event(ubyte2 event_code, Lotus_Callback onEvent);
 

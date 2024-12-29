@@ -4,44 +4,44 @@ float lotus_to_radians(float deg) {
     return deg * LOTUS_PI/180.0;
 }
 
-// Creates a lotus_vec2
-lotus_vec2 lotus_new_vec2(float x, float y) {
-    return (lotus_vec2){x, y};
+// Creates a Lotus_Vec2
+Lotus_Vec2 lotus_new_vec2(float x, float y) {
+    return (Lotus_Vec2){x, y};
 }
 
-// Scales a lotus_vec2 by a scalar value
-lotus_vec2 lotus_scale_vec2(lotus_vec2 v, float scale) {
-    return (lotus_vec2){v.x * scale, v.y * scale};
+// Scales a Lotus_Vec2 by a scalar value
+Lotus_Vec2 lotus_scale_vec2(Lotus_Vec2 v, float scale) {
+    return (Lotus_Vec2){v.x * scale, v.y * scale};
 }
 
 // Adds two Vec2s
-lotus_vec2 lotus_add_vec2(lotus_vec2 v1, lotus_vec2 v2) {
-    return (lotus_vec2){v1.x + v2.x, v1.y + v2.y};
+Lotus_Vec2 lotus_add_vec2(Lotus_Vec2 v1, Lotus_Vec2 v2) {
+    return (Lotus_Vec2){v1.x + v2.x, v1.y + v2.y};
 }
 
-// Subtracts one lotus_vec2 from another
-lotus_vec2 lotus_sub_vec2(lotus_vec2 v1, lotus_vec2 v2) {
-    return (lotus_vec2){v1.x - v2.x, v1.y - v2.y};
+// Subtracts one Lotus_Vec2 from another
+Lotus_Vec2 lotus_sub_vec2(Lotus_Vec2 v1, Lotus_Vec2 v2) {
+    return (Lotus_Vec2){v1.x - v2.x, v1.y - v2.y};
 }
 
 // Dot product of two Vec2s
-float lotus_dot_vec2(lotus_vec2 v1, lotus_vec2 v2) {
+float lotus_dot_vec2(Lotus_Vec2 v1, Lotus_Vec2 v2) {
     return v1.x * v2.x + v1.y * v2.y;
 }
 
-// Normalize a lotus_vec2 (make it unit length)
-lotus_vec2 lotus_norm_vec2(lotus_vec2 v) {
+// Normalize a Lotus_Vec2 (make it unit length)
+Lotus_Vec2 lotus_norm_vec2(Lotus_Vec2 v) {
     float length = sqrtf(v.x * v.x + v.y * v.y);
     return lotus_scale_vec2(v, 1.0f / length);
 }
 
-// Creates a lotus_vec3
-lotus_vec3 lotus_new_vec3(float x, float y, float z) {
-    return (lotus_vec3){x, y, z};
+// Creates a Lotus_Vec3
+Lotus_Vec3 lotus_new_vec3(float x, float y, float z) {
+    return (Lotus_Vec3){x, y, z};
 }
 // Scales a vector by a scalar value
-lotus_vec3 lotus_scale_vec3(lotus_vec3 v, float scale) {
-    lotus_vec3 result;
+Lotus_Vec3 lotus_scale_vec3(Lotus_Vec3 v, float scale) {
+    Lotus_Vec3 result;
     result.x = v.x * scale;
     result.y = v.y * scale;
     result.z = v.z * scale;
@@ -49,8 +49,8 @@ lotus_vec3 lotus_scale_vec3(lotus_vec3 v, float scale) {
 }
 
 // Adds two vectors
-lotus_vec3 lotus_add_vec3(lotus_vec3 v1, lotus_vec3 v2) {
-    lotus_vec3 result;
+Lotus_Vec3 lotus_add_vec3(Lotus_Vec3 v1, Lotus_Vec3 v2) {
+    Lotus_Vec3 result;
     result.x = v1.x + v2.x;
     result.y = v1.y + v2.y;
     result.z = v1.z + v2.z;
@@ -58,27 +58,27 @@ lotus_vec3 lotus_add_vec3(lotus_vec3 v1, lotus_vec3 v2) {
 }
 
 // Subtracts one vector from another
-lotus_vec3 lotus_sub_vec3(lotus_vec3 v1, lotus_vec3 v2) {
-    lotus_vec3 result;
+Lotus_Vec3 lotus_sub_vec3(Lotus_Vec3 v1, Lotus_Vec3 v2) {
+    Lotus_Vec3 result;
     result.x = v1.x - v2.x;
     result.y = v1.y - v2.y;
     result.z = v1.z - v2.z;
     return result;
 }
 
-float lotus_dot_vec3(lotus_vec3 a, lotus_vec3 b) {
+float lotus_dot_vec3(Lotus_Vec3 a, Lotus_Vec3 b) {
     return a.x * b.x + a.y * b.y + a.z * b.z;
 }
 
 // Normalize a vector (make it unit length)
-lotus_vec3 lotus_norm_vec3(lotus_vec3 v) {
+Lotus_Vec3 lotus_norm_vec3(Lotus_Vec3 v) {
     float length = sqrtf(v.x * v.x + v.y * v.y + v.z * v.z);
     return lotus_scale_vec3(v, 1.0f / length);
 }
 
 // Cross product of two vectors
-lotus_vec3 lotus_cross_vec3(lotus_vec3 v1, lotus_vec3 v2) {
-    lotus_vec3 result;
+Lotus_Vec3 lotus_cross_vec3(Lotus_Vec3 v1, Lotus_Vec3 v2) {
+    Lotus_Vec3 result;
     result.x = v1.y * v2.z - v1.z * v2.y;
     result.y = v1.z * v2.x - v1.x * v2.z;
     result.z = v1.x * v2.y - v1.y * v2.x;
@@ -86,39 +86,39 @@ lotus_vec3 lotus_cross_vec3(lotus_vec3 v1, lotus_vec3 v2) {
 }
 
 
-// Creates a lotus_vec4
-lotus_vec4 lotus_new_vec4(float x, float y, float z, float w) {
-    return (lotus_vec4){x, y, z, w};
+// Creates a Lotus_Vec4
+Lotus_Vec4 lotus_new_vec4(float x, float y, float z, float w) {
+    return (Lotus_Vec4){x, y, z, w};
 }
 
-// Scales a lotus_vec4 by a scalar value
-lotus_vec4 lotus_scale_vec4(lotus_vec4 v, float scale) {
-    return (lotus_vec4){v.x * scale, v.y * scale, v.z * scale, v.w * scale};
+// Scales a Lotus_Vec4 by a scalar value
+Lotus_Vec4 lotus_scale_vec4(Lotus_Vec4 v, float scale) {
+    return (Lotus_Vec4){v.x * scale, v.y * scale, v.z * scale, v.w * scale};
 }
 
 // Adds two Vec4s
-lotus_vec4 lotus_add_vec4(lotus_vec4 v1, lotus_vec4 v2) {
-    return (lotus_vec4){v1.x + v2.x, v1.y + v2.y, v1.z + v2.z, v1.w + v2.w};
+Lotus_Vec4 lotus_add_vec4(Lotus_Vec4 v1, Lotus_Vec4 v2) {
+    return (Lotus_Vec4){v1.x + v2.x, v1.y + v2.y, v1.z + v2.z, v1.w + v2.w};
 }
 
-// Subtracts one lotus_vec4 from another
-lotus_vec4 lotus_sub_vec4(lotus_vec4 v1, lotus_vec4 v2) {
-    return (lotus_vec4){v1.x - v2.x, v1.y - v2.y, v1.z - v2.z, v1.w - v2.w};
+// Subtracts one Lotus_Vec4 from another
+Lotus_Vec4 lotus_sub_vec4(Lotus_Vec4 v1, Lotus_Vec4 v2) {
+    return (Lotus_Vec4){v1.x - v2.x, v1.y - v2.y, v1.z - v2.z, v1.w - v2.w};
 }
 
 // Dot product of two Vec4s
-float lotus_dot_vec4(lotus_vec4 v1, lotus_vec4 v2) {
+float lotus_dot_vec4(Lotus_Vec4 v1, Lotus_Vec4 v2) {
     return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z + v1.w * v2.w;
 }
 
-// Normalize a lotus_vec4 (make it unit length)
-lotus_vec4 lotus_norm_vec4(lotus_vec4 v) {
+// Normalize a Lotus_Vec4 (make it unit length)
+Lotus_Vec4 lotus_norm_vec4(Lotus_Vec4 v) {
     float length = sqrtf(v.x * v.x + v.y * v.y + v.z * v.z + v.w * v.w);
     return lotus_scale_vec4(v, 1.0f / length);
 }
 
-lotus_mat4 lotus_identity() {
-    lotus_mat4 result = {0};
+Lotus_Mat4 lotus_identity() {
+    Lotus_Mat4 result = {0};
     result.m[0] = 1.0f;
     result.m[5] = 1.0f;
     result.m[10] = 1.0f;
@@ -126,24 +126,24 @@ lotus_mat4 lotus_identity() {
     return result;
 }
 
-lotus_vec3 lotus_mul_mat4_vec3(lotus_mat4 m, lotus_vec3 v) {
-    lotus_vec3 result;
+Lotus_Vec3 lotus_mul_mat4_vec3(Lotus_Mat4 m, Lotus_Vec3 v) {
+    Lotus_Vec3 result;
     result.x = m.m[0] * v.x + m.m[4] * v.y + m.m[8] * v.z + m.m[12];
     result.y = m.m[1] * v.x + m.m[5] * v.y + m.m[9] * v.z + m.m[13];
     result.z = m.m[2] * v.x + m.m[6] * v.y + m.m[10] * v.z + m.m[14];
     return result;
 }
 
-lotus_mat4 lotus_trans_mat4(float x, float y, float z) {
-    lotus_mat4 result = lotus_identity();
+Lotus_Mat4 lotus_trans_mat4(float x, float y, float z) {
+    Lotus_Mat4 result = lotus_identity();
     result.m[12] = x;
     result.m[13] = y;
     result.m[14] = z;
     return result;
 }
 
-lotus_mat4 lotus_rot_mat4(float x, float y, float z, float angle) {
-    lotus_mat4 result = lotus_identity();
+Lotus_Mat4 lotus_rot_mat4(float x, float y, float z, float angle) {
+    Lotus_Mat4 result = lotus_identity();
     float rad = lotus_to_radians(angle);
     float cos_theta = cosf(rad);
     float sin_theta = sinf(rad);
@@ -170,16 +170,16 @@ lotus_mat4 lotus_rot_mat4(float x, float y, float z, float angle) {
     return result;
 }
 
-lotus_mat4 lotus_scale_mat4(float x, float y, float z) {
-    lotus_mat4 result = lotus_identity();
+Lotus_Mat4 lotus_scale_mat4(float x, float y, float z) {
+    Lotus_Mat4 result = lotus_identity();
     result.m[0] = x;
     result.m[5] = y;
     result.m[10] = z;
     return result;
 }
 
-lotus_mat4 lotus_mul_mat4(lotus_mat4 a, lotus_mat4 b) {
-    lotus_mat4 result = {0};
+Lotus_Mat4 lotus_mul_mat4(Lotus_Mat4 a, Lotus_Mat4 b) {
+    Lotus_Mat4 result = {0};
     for (int row = 0; row < 4; ++row) {
         for (int col = 0; col < 4; ++col) {
             for (int i = 0; i < 4; ++i) {
@@ -190,8 +190,8 @@ lotus_mat4 lotus_mul_mat4(lotus_mat4 a, lotus_mat4 b) {
     return result;
 }
 
-lotus_mat4 lotus_ortho(float left, float right, float bottom, float top, float near, float far) {
-    lotus_mat4 result = lotus_identity();
+Lotus_Mat4 lotus_ortho(float left, float right, float bottom, float top, float near, float far) {
+    Lotus_Mat4 result = lotus_identity();
 
     result.m[0] = 2.0f / (right - left);
     result.m[5] = 2.0f / (top - bottom);
@@ -204,8 +204,8 @@ lotus_mat4 lotus_ortho(float left, float right, float bottom, float top, float n
     return result;
 }
 
-lotus_mat4 lotus_perspective(float fov, float aspect, float near, float far) {
-    lotus_mat4 result = lotus_identity();
+Lotus_Mat4 lotus_perspective(float fov, float aspect, float near, float far) {
+    Lotus_Mat4 result = lotus_identity();
     float tan_half_fov = tanf(fov / 2.0f);
     
     result.m[0] = 1.0f / (aspect * tan_half_fov);
@@ -218,12 +218,12 @@ lotus_mat4 lotus_perspective(float fov, float aspect, float near, float far) {
     return result;
 }
 
-lotus_mat4 lotus_look_at(lotus_vec3 eye, lotus_vec3 center, lotus_vec3 up) {
-    lotus_vec3 f = lotus_norm_vec3(lotus_sub_vec3(center, eye));
-    lotus_vec3 s = lotus_norm_vec3(lotus_cross_vec3(f, up));
-    lotus_vec3 u = lotus_cross_vec3(s, f);
+Lotus_Mat4 lotus_look_at(Lotus_Vec3 eye, Lotus_Vec3 center, Lotus_Vec3 up) {
+    Lotus_Vec3 f = lotus_norm_vec3(lotus_sub_vec3(center, eye));
+    Lotus_Vec3 s = lotus_norm_vec3(lotus_cross_vec3(f, up));
+    Lotus_Vec3 u = lotus_cross_vec3(s, f);
 
-    lotus_mat4 result = lotus_identity();
+    Lotus_Mat4 result = lotus_identity();
     result.m[0] = s.x;
     result.m[4] = s.y;
     result.m[8] = s.z;

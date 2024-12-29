@@ -10,9 +10,9 @@ _LOTUS_PRIVATE int lotus_string_hash(const char* buffer) {
     }; return res;
 }
 
-_LOTUS_PRIVATE bool lotus_probe_hashmap_f(lotus_hashmap* m, int* kHash, const char* key) {
+_LOTUS_PRIVATE bool lotus_probe_hashmap_f(Lotus_Hashmap* m, int* kHash, const char* key) {
     bool match = 0;
-    lotus_key_value* kvp = m->map[*kHash];
+    Lotus_Key_Value* kvp = m->map[*kHash];
     
     for (int i = *kHash+1; i < m->max; i++) {
         kvp = m->map[i];
@@ -32,9 +32,9 @@ _LOTUS_PRIVATE bool lotus_probe_hashmap_f(lotus_hashmap* m, int* kHash, const ch
     } return match;
 }
 
-_LOTUS_PRIVATE bool lotus_probe_hashmap_r(lotus_hashmap* m, int* kHash, const char* key) {
+_LOTUS_PRIVATE bool lotus_probe_hashmap_r(Lotus_Hashmap* m, int* kHash, const char* key) {
     bool match = 0;
-    lotus_key_value* kvp = m->map[*kHash];
+    Lotus_Key_Value* kvp = m->map[*kHash];
     
     for (int i = *kHash-1; i > 0; i--) {
         kvp = m->map[i];
@@ -54,8 +54,8 @@ _LOTUS_PRIVATE bool lotus_probe_hashmap_r(lotus_hashmap* m, int* kHash, const ch
     } return match;
 }
 
-lotus_hashmap* lotus_make_hashmap(int max) {
-    lotus_hashmap* m = (lotus_hashmap*)malloc(sizeof(lotus_hashmap));
+Lotus_Hashmap* lotus_make_hashmap(int max) {
+    Lotus_Hashmap* m = (Lotus_Hashmap*)malloc(sizeof(Lotus_Hashmap));
     if (!m) {
         lotus_set_log_level(LOTUS_LOG_ERROR);
         lotus_log_error("failed to allocate hashmap");
@@ -65,7 +65,7 @@ lotus_hashmap* lotus_make_hashmap(int max) {
     m->max = max;
     m->count = 0;
 
-    m->map = (lotus_key_value**)calloc(max, sizeof(lotus_key_value*));
+    m->map = (Lotus_Key_Value**)calloc(max, sizeof(Lotus_Key_Value*));
     if (!m->map) {
         free(m);
         lotus_set_log_level(LOTUS_LOG_ERROR);
@@ -76,7 +76,7 @@ lotus_hashmap* lotus_make_hashmap(int max) {
     return m;
 }
 
-void lotus_destroy_hashmap(lotus_hashmap* m) {
+void lotus_destroy_hashmap(Lotus_Hashmap* m) {
     for (int i = 0; i < m->max; i++) {
         if (m->map[i]) {
             free(m->map[i]->v);
@@ -87,11 +87,11 @@ void lotus_destroy_hashmap(lotus_hashmap* m) {
     free(m);
 }
 
-void* lotus_get_hashmap(lotus_hashmap* m, const char* key) {
+void* lotus_get_hashmap(Lotus_Hashmap* m, const char* key) {
     if (!key) { return NULL; }
 
     int kHash = lotus_string_hash(key) % m->max;
-    lotus_key_value* kvp = m->map[kHash];
+    Lotus_Key_Value* kvp = m->map[kHash];
 
     if (kvp && strcmp(key, kvp->k)) {
         bool match = 0;
@@ -114,11 +114,11 @@ void* lotus_get_hashmap(lotus_hashmap* m, const char* key) {
     }; return kvp->v;
 }
 
-lotus_error_type lotus_set_hashmap(lotus_hashmap* m, const char* key, void* value) {
+Lotus_Error_Type lotus_set_hashmap(Lotus_Hashmap* m, const char* key, void* value) {
     if (!key || !value || m->count+1 > m->max) { return LOTUS_ERR_TYPE; }
 
     int kHash = lotus_string_hash(key) % m->max;
-    lotus_key_value* kvp = m->map[kHash];
+    Lotus_Key_Value* kvp = m->map[kHash];
 
     // resolve collisions with open addressing + linear probing
     if (kvp) {
@@ -142,18 +142,18 @@ lotus_error_type lotus_set_hashmap(lotus_hashmap* m, const char* key, void* valu
         }
     }
 
-    m->map[kHash] = (lotus_key_value*)malloc(sizeof(lotus_key_value));
+    m->map[kHash] = (Lotus_Key_Value*)malloc(sizeof(Lotus_Key_Value));
     m->map[kHash]->k = strdup(key);
     m->map[kHash]->v = value;
     m->count++;
     return LOTUS_ERR_NONE;
 }
 
-lotus_error_type lotus_rem_hashmap(lotus_hashmap* m, const char* key) {
+Lotus_Error_Type lotus_rem_hashmap(Lotus_Hashmap* m, const char* key) {
     if (!key) { return LOTUS_ERR_TYPE; }
 
     int kHash = lotus_string_hash(key) % m->max;
-    lotus_key_value* kvp = m->map[kHash];
+    Lotus_Key_Value* kvp = m->map[kHash];
 
     if (kvp && strcmp(key, kvp->k)) {
         bool match = 0;

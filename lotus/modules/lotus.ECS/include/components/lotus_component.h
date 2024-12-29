@@ -6,23 +6,23 @@
 #include "lotus_texture.h"
 #include "lotus_transform.h"
 
-typedef union lotus_component_data {
-    lotus_mesh_component mesh;
-    lotus_transform_component transform;
-} lotus_component_data;
+typedef union Lotus_Component_Data {
+    Lotus_Mesh mesh;
+    Lotus_Transform transform;
+} Lotus_Component_Data;
 
 // tagged component union
-struct lotus_component {
-    lotus_component_data data;
-    lotus_component_type type;
+struct Lotus_Component {
+    Lotus_Component_Data data;
+    Lotus_Component_Type type;
 };
 
-typedef void (*_add_component_ptr)(void* component_data, lotus_entity entity);
-typedef void (*_rem_component_ptr)(void* component_data, lotus_entity entity);
-typedef void (*_set_component_ptr)(void* component_data, lotus_component component, lotus_entity entity);
-typedef lotus_component (*_get_component_ptr)(void* component_data, lotus_entity entity);
+typedef void (*_add_component_ptr)(void* component_data, Lotus_Entity entity);
+typedef void (*_rem_component_ptr)(void* component_data, Lotus_Entity entity);
+typedef void (*_set_component_ptr)(void* component_data, Lotus_Component component, Lotus_Entity entity);
+typedef Lotus_Component (*_get_component_ptr)(void* component_data, Lotus_Entity entity);
 
-typedef struct lotus_component_manager {
+typedef struct Lotus_Component_Manager {
     struct component_handler {
         _add_component_ptr add_component;
         _rem_component_ptr rem_component;
@@ -34,21 +34,21 @@ typedef struct lotus_component_manager {
         void* data;
         ubyte active[LOTUS_ENTITY_MAX];
     } component_register[LOTUS_COMPONENT_TYPES];
-} lotus_component_manager;
+} Lotus_Component_Manager;
 
 LOTUS_API_ENTRY ubyte lotus_register_component(
-    lotus_component_manager* manager,
-    lotus_component_type type,
+    Lotus_Component_Manager* manager,
+    Lotus_Component_Type type,
     void* data,
     _add_component_ptr add_component,
     _rem_component_ptr rem_component,
     _set_component_ptr set_component,
     _get_component_ptr get_component
 );
-LOTUS_API_ENTRY ubyte lotus_unregister_component(lotus_component_manager* manager, lotus_component_type type);
+LOTUS_API_ENTRY ubyte lotus_unregister_component(Lotus_Component_Manager* manager, Lotus_Component_Type type);
 
-LOTUS_API_ENTRY void lotus_add_component(lotus_component_manager* manager, lotus_component_type type, lotus_entity entity);
-LOTUS_API_ENTRY ubyte lotus_has_component(lotus_component_manager* manager, lotus_component_type type, lotus_entity entity);
-LOTUS_API_ENTRY void lotus_rem_component(lotus_component_manager* manager, lotus_component_type type, lotus_entity entity);
-LOTUS_API_ENTRY void lotus_set_component(lotus_component_manager* manager, lotus_component component, lotus_entity entity);
-LOTUS_API_ENTRY lotus_component lotus_get_component(lotus_component_manager* manager, lotus_component_type type, lotus_entity entity);
+LOTUS_API_ENTRY void lotus_add_component(Lotus_Component_Manager* manager, Lotus_Component_Type type, Lotus_Entity entity);
+LOTUS_API_ENTRY ubyte lotus_has_component(Lotus_Component_Manager* manager, Lotus_Component_Type type, Lotus_Entity entity);
+LOTUS_API_ENTRY void lotus_rem_component(Lotus_Component_Manager* manager, Lotus_Component_Type type, Lotus_Entity entity);
+LOTUS_API_ENTRY void lotus_set_component(Lotus_Component_Manager* manager, Lotus_Component component, Lotus_Entity entity);
+LOTUS_API_ENTRY Lotus_Component lotus_get_component(Lotus_Component_Manager* manager, Lotus_Component_Type type, Lotus_Entity entity);
