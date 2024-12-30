@@ -25,7 +25,7 @@ Lotus_Scene* lotus_init_scene(ubyte id, const char* name) {
 
 void lotus_destroy_scene(Lotus_Scene* scene) {
     if (!scene) return;
-    lotus_exit_ecs(&scene->entity_namager, &scene->component_manager);
+    lotus_shutdown_ecs(&scene->entity_namager, &scene->component_manager);
     lotus_destroy_allocator(&scene->allocator);
 }
 

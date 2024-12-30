@@ -1,8 +1,5 @@
 #pragma once
 
-// TODO: application default callbacks, and events (push out frame events, to register external frame callbacks to) 
-// eliminating redundant functions (set mid/fixed/...) just use the register_event_callback() function
-
 #include "../platform/lotus_input.h"
 #include "../platform/lotus_event.h"
 #include "../platform/lotus_platform.h"
@@ -18,10 +15,19 @@
 #define LOTUS_DEFAULT_APPLICATION_HEAP_SIZE 1024 * 1024 // 1kb application heap for runtime allocations
 
 typedef struct Lotus_Application Lotus_Application;
-typedef ubyte4(*Lotus_Application_Preframe_Callback)(void);
-typedef ubyte4(*Lotus_Application_Fixedframe_Callback)(void);
-typedef ubyte4(*Lotus_Application_Midframe_Callback)(void);
-typedef ubyte4(*Lotus_Application_Postframe_Callback)(void);
+typedef ubyte4(*_Application_Preframe_Callback_Ptr)(void);
+typedef ubyte4(*_Application_Fixedframe_Callback_Ptr)(void);
+typedef ubyte4(*_Application_Midframe_Callback_Ptr)(void);
+typedef ubyte4(*_Application_Postframe_Callback_Ptr)(void);
+
+typedef enum Lotus_Application_Event {
+    LOTUS_APPLICATION_PREFRAME_EVENT = 0,
+    LOTUS_APPLICATION_FIXEDFRAME_EVENT,
+    LOTUS_APPLICATION_MIDFRAME_EVENT,
+    LOTUS_APPLICATION_POSTFRAME_EVENT,
+    LOTUS_APPLICATION_EVENTS,
+    LOTUS_APPLICATION_EVENT_MAX = LOTUS_EVENT_MAX
+} Lotus_Application_Event;
 
 struct Lotus_Application {
     struct info {
@@ -32,6 +38,7 @@ struct Lotus_Application {
     struct state {
         ubyte running;
         ubyte scene_count;
+        ubyte callback_count;
     } state;
 
     struct resource {
@@ -45,10 +52,7 @@ struct Lotus_Application {
         Lotus_Platform_API* platform_api;
     } resource;
 
-    Lotus_Application_Preframe_Callback preframe_callback;
-    Lotus_Application_Fixedframe_Callback fixedframe_callback;
-    Lotus_Application_Midframe_Callback midframe_callback;
-    Lotus_Application_Postframe_Callback postframe_callback;
+    Lotus_Event_Callback callbacks[LOTUS_APPLICATION_EVENTS];
 };
 
 typedef struct Lotus_Application_API {
@@ -62,11 +66,32 @@ typedef struct Lotus_Application_API {
     Lotus_Scene* (*get_scene)(ubyte scene_id);
     void (*destroy_scene)(ubyte scene_id);
 
-    ubyte (*set_preframe)(Lotus_Application_Preframe_Callback callback);
-    ubyte (*set_fixedframe)(Lotus_Application_Fixedframe_Callback callback);
-    ubyte (*set_midframe)(Lotus_Application_Midframe_Callback callback);
-    ubyte (*set_postframe)(Lotus_Application_Postframe_Callback callback);
+    ubyte (*set_callback)(Lotus_Application_Event event, Lotus_Event_Callback callback);
     ubyte (*run)(void);
+
+    // application-level ECS wrapper
+    ubyte (*init_ecs)(ubyte scene_id);
+    void (*shutdown_ecs)(ubyte scene_id);
+
+    Lotus_Entity (*make_entity)(ubyte scene_id);
+    ubyte (*kill_entity)(ubyte scene_id, Lotus_Entity entity);
+
+    ubyte (*register_component)(
+        ubyte scene_id,
+        Lotus_Component_Type type,
+        void* data,
+        _add_component_ptr add_component,
+        _rem_component_ptr rem_component,
+        _set_component_ptr set_component,
+        _get_component_ptr get_component
+    );
+    ubyte (*unregister_component)(ubyte scene_id, Lotus_Component_Type type);
+    
+    void (*add_component)(ubyte scene_id, Lotus_Component_Type type, Lotus_Entity entity);
+    ubyte (*has_component)(ubyte scene_id, Lotus_Component_Type type, Lotus_Entity entity);
+    void (*rem_component)(ubyte scene_id, Lotus_Component_Type type, Lotus_Entity entity);
+    void (*set_component)(ubyte scene_id, Lotus_Component component, Lotus_Entity entity);
+    Lotus_Component (*get_component)(ubyte scene_id, Lotus_Component_Type type, Lotus_Entity entity);
 } Lotus_Application_API;
 
 LOTUS_API_ENTRY Lotus_Application_API* lotus_init_application(void);

@@ -10,7 +10,7 @@ typedef struct Lotus_Entity_Manager {
 } Lotus_Entity_Manager;
 
 LOTUS_API_ENTRY ubyte lotus_init_ecs(Lotus_Entity_Manager* e_manager, Lotus_Component_Manager* c_manager);
-LOTUS_API_ENTRY void lotus_exit_ecs(Lotus_Entity_Manager* e_manager, Lotus_Component_Manager* c_manager);
+LOTUS_API_ENTRY void lotus_shutdown_ecs(Lotus_Entity_Manager* e_manager, Lotus_Component_Manager* c_manager);
 
 LOTUS_API_ENTRY Lotus_Entity lotus_make_entity(Lotus_Entity_Manager* manager);
 LOTUS_API_ENTRY ubyte lotus_kill_entity(Lotus_Entity_Manager* manager, Lotus_Entity entity);

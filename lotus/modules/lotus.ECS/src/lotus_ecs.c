@@ -30,7 +30,7 @@ ubyte lotus_init_ecs(Lotus_Entity_Manager* e_manager, Lotus_Component_Manager* c
     return LOTUS_TRUE;
 }
 
-void lotus_exit_ecs(Lotus_Entity_Manager* e_manager, Lotus_Component_Manager* c_manager) {
+void lotus_shutdown_ecs(Lotus_Entity_Manager* e_manager, Lotus_Component_Manager* c_manager) {
     e_manager->next = 0;
     e_manager->count = 0;
 

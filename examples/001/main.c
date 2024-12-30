@@ -33,61 +33,66 @@ Lotus_Vec3 center = {0.0f, 0.0f, 0.0f};
 
 Lotus_Application_API* app_api;
 Lotus_Application* app;
-Lotus_Scene* scene;
+ubyte scene_id;
 
 Lotus_Entity e0;
 Lotus_Component e0_mesh;
 Lotus_Component e0_transform;
 
-ubyte4 midframe(void) {
-    f32 speed = 0.01;
-    Lotus_Vec3 new_location = lotus_new_vec3(
-        e0_transform.data.transform.location.x,
-        e0_transform.data.transform.location.y,
-        e0_transform.data.transform.location.z
-    );
+ubyte midframe_callback(Lotus_Event data, ubyte2 event_code) {
+    if (event_code == LOTUS_APPLICATION_MIDFRAME_EVENT) {
+        f32 speed = 0.01;
+        Lotus_Vec3 new_location = lotus_new_vec3(
+            e0_transform.data.transform.location.x,
+            e0_transform.data.transform.location.y,
+            e0_transform.data.transform.location.z
+        );
 
-    if (lotus_key_is_down(LOTUS_KEY_A)) new_location.x -= speed;
-    if (lotus_key_is_down(LOTUS_KEY_D)) new_location.x += speed;
-    
-    if (lotus_key_is_down(LOTUS_KEY_W)) new_location.y += speed;
-    if (lotus_key_is_down(LOTUS_KEY_S)) new_location.y -= speed;
+        if (lotus_key_is_down(LOTUS_KEY_A)) new_location.x -= speed;
+        if (lotus_key_is_down(LOTUS_KEY_D)) new_location.x += speed;
+        
+        if (lotus_key_is_down(LOTUS_KEY_W)) new_location.y += speed;
+        if (lotus_key_is_down(LOTUS_KEY_S)) new_location.y -= speed;
 
-    // apply transforms before sending data to GPU
-    Lotus_Mat4 m_translation = lotus_mul_mat4(lotus_identity(), lotus_trans_mat4(
-        new_location.x,
-        new_location.y,
-        new_location.z
-    ));
+        // apply transforms before sending data to GPU
+        Lotus_Mat4 m_translation = lotus_mul_mat4(lotus_identity(), lotus_trans_mat4(
+            new_location.x,
+            new_location.y,
+            new_location.z
+        ));
 
-    // update component data internally and then externally
-    lotus_set_component(&scene->component_manager, (Lotus_Component){
-        .type = LOTUS_TRANSFORM_COMPONENT,
-        .data.transform.model = m_translation,
-        .data.transform.location = new_location,
-    }, e0); e0_transform = lotus_get_component(&scene->component_manager, LOTUS_TRANSFORM_COMPONENT, e0);
+        // update component data internally and then externally
+        app_api->set_component(scene_id, (Lotus_Component){
+            .type = LOTUS_TRANSFORM_COMPONENT,
+            .data.transform.model = m_translation,
+            .data.transform.location = new_location,
+        }, e0); e0_transform = app_api->get_component(scene_id, LOTUS_TRANSFORM_COMPONENT, e0);
 
-    lotus_send_shader_uniform(my_shader, LOTUS_UNIFORM_MAT4, "u_view");
+        lotus_send_shader_uniform(my_shader, LOTUS_UNIFORM_MAT4, "u_view");
 
-    lotus_draw_submit(
-        e0_mesh.data.mesh.vbo,
-        e0_mesh.data.mesh.ebo,
-        e0_mesh.data.mesh.vao,
-        &e0_transform.data.transform.model,
-        e0_mesh.data.mesh.n_indices,
-        e0_mesh.data.mesh.n_vertices
-    );
-
-    return LOTUS_TRUE;
+        lotus_draw_submit(
+            e0_mesh.data.mesh.vbo,
+            e0_mesh.data.mesh.ebo,
+            e0_mesh.data.mesh.vao,
+            &e0_transform.data.transform.model,
+            e0_mesh.data.mesh.n_indices,
+            e0_mesh.data.mesh.n_vertices
+        ); return LOTUS_TRUE;
+    }; return LOTUS_FALSE;
 }
 
-void ecs_test() {
-    e0 = lotus_make_entity(&scene->entity_namager);
+int main() {
+    app_api = lotus_init_application();
+    app = app_api->initialize("My Application", LOTUS_VEC2(ubyte4, 1280, 720));
 
-    lotus_add_component(&scene->component_manager, LOTUS_MESH_COMPONENT, e0);
-    lotus_add_component(&scene->component_manager, LOTUS_TRANSFORM_COMPONENT, e0);
+    sbyte scene_id = app_api->create_scene("My Scene");
 
-    lotus_set_component(&scene->component_manager, 
+    e0 = app_api->make_entity(scene_id);
+
+    app_api->add_component(scene_id, LOTUS_MESH_COMPONENT, e0);
+    app_api->add_component(scene_id, LOTUS_TRANSFORM_COMPONENT, e0);
+
+    app_api->set_component(scene_id, 
         (Lotus_Component){ 
             .type = LOTUS_MESH_COMPONENT, 
             .data.mesh.attrs = LOTUS_LOCATION_ATTR | LOTUS_COLOR_ATTR,
@@ -100,28 +105,8 @@ void ecs_test() {
         }, e0
     );
 
-    e0_mesh = lotus_get_component(&scene->component_manager, LOTUS_MESH_COMPONENT, e0);
-    e0_transform = lotus_get_component(&scene->component_manager, LOTUS_TRANSFORM_COMPONENT, e0);
-}
-
-int main() {
-    app_api = lotus_init_application();
-
-    app = app_api->initialize("My Application", LOTUS_VEC2(ubyte4, 1280, 720));
-
-    sbyte scene_id = app_api->create_scene("My Scene");
-    printf("scene id created: %d\n", scene_id);
-
-    if (scene_id >= 0) {
-        scene = app_api->get_scene(scene_id);
-    }
-
-    lotus_draw_begin(LOTUS_TRIANGLE_MODE, 133, 161, 172, 255, lotus_perspective(lotus_to_radians(45.0), 1280/720, 0.1, 1000.0));
-    // lotus_draw_begin(LOTUS_TRIANGLE_MODE, 133, 161, 172, 255, lotus_ortho(0, 1, 0, 1, 0.1, 10));
-
-    ecs_test();
-
-    app_api->set_midframe(midframe);
+    e0_mesh = app_api->get_component(scene_id, LOTUS_MESH_COMPONENT, e0);
+    e0_transform = app_api->get_component(scene_id, LOTUS_TRANSFORM_COMPONENT, e0);
 
     my_shader = lotus_make_shader(vShader, fShader);
     lotus_set_renderer_shader(&my_shader);
@@ -133,9 +118,10 @@ int main() {
     m_view = lotus_look_at(eye, center, up);
     lotus_set_shader_uniform(my_shader, "u_view", &m_view);
     
+    lotus_draw_begin(LOTUS_TRIANGLE_MODE, 133, 161, 172, 255, lotus_perspective(lotus_to_radians(45.0), 1280/720, 0.1, 1000.0));
+    // lotus_draw_begin(LOTUS_TRIANGLE_MODE, 133, 161, 172, 255, lotus_ortho(0, 1, 0, 1, 0.1, 10));
+    app_api->set_callback(LOTUS_APPLICATION_MIDFRAME_EVENT, midframe_callback);
     app_api->run();
-
-    lotus_rem_component(&scene->component_manager, LOTUS_MESH_COMPONENT, e0);
     
     return 0;
 }
