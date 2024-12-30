@@ -1,13 +1,13 @@
 #include "../include/graphics/lotus_gl.h"
 #include "../include/graphics/lotus_glapi.h"
 
+#include "../include/platform/lotus_logger.h"
+
 #include "../include/utility/lotus_array.h"
 
 static Lotus_Renderer internal_renderer_state = {0};
 
 void lotus_init_renderer(void) {
-    memset(&internal_renderer_state, 0, sizeof(Lotus_Renderer));
-
     internal_renderer_state.draws = 0;
     internal_renderer_state.passes = 0;
     internal_renderer_state.shader = NULL;
@@ -101,12 +101,13 @@ void lotus_destroy_renderer() {
 }
 
 Lotus_Shader lotus_make_shader(const char* vertex_shader, const char* fragment_shader) {
+    lotus_set_log_level(LOTUS_LOG_ERROR);
     sbyte4 link = 0;
     sbyte4 compile = 0;
 
     Lotus_Shader program = {.uniforms=lotus_make_hashmap(16)};
     if (!program.uniforms) {
-        printf("failed to allocate uniform hashmap!\n");
+        lotus_log_error("failed to allocate uniform hashmap!\n");
         return (Lotus_Shader){0};
     }
 
@@ -118,7 +119,7 @@ Lotus_Shader lotus_make_shader(const char* vertex_shader, const char* fragment_s
     lgl_compile_shader(v_Shader);
     lgl_get_shaderiv(v_Shader, LOTUS_COMPILE_STATUS, &compile);
     if (!compile) {
-        printf("failed to compile vertex-shader!\n");
+        lotus_log_error("failed to compile vertex-shader!\n");
         lotus_destroy_hashmap(program.uniforms);
         return (Lotus_Shader){0};
     }
@@ -127,7 +128,7 @@ Lotus_Shader lotus_make_shader(const char* vertex_shader, const char* fragment_s
     lgl_compile_shader(f_Shader);
     lgl_get_shaderiv(f_Shader, LOTUS_COMPILE_STATUS, &compile);
     if (!compile) {
-        printf("failed to compile fragment-shader!\n");
+        lotus_log_error("failed to compile fragment-shader!\n");
         lotus_destroy_hashmap(program.uniforms);
         return (Lotus_Shader){0};
     }
@@ -137,7 +138,7 @@ Lotus_Shader lotus_make_shader(const char* vertex_shader, const char* fragment_s
     lgl_link_program(program.program);
     lgl_get_programiv(program.program, LOTUS_LINK_STATUS, &link);
     if (!link) {
-        printf("failed to link shader program!\n");
+        lotus_log_error("failed to link shader program!\n");
         lotus_destroy_hashmap(program.uniforms);
         return (Lotus_Shader){0};
     }

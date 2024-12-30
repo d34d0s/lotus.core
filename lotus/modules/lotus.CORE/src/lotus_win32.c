@@ -1,3 +1,4 @@
+#include "../include/platform/lotus_logger.h"
 #include "../include/platform/lotus_platform.h"
 
 #if defined(LOTUS_PLATFORM_WINDOWS)
@@ -12,28 +13,13 @@ typedef struct Platform_Window_Data {
     HINSTANCE instance;
 } Platform_Window_Data;
 
+static Lotus_Platform_API internal_platform_api = {0};
 static Lotus_Platform_State internal_platform_state = {0};
 
-Lotus_Platform_State* lotus_init_platform(void) {
-    internal_platform_state.platform = LOTUS_WINDOWS_TAG;
-    
-    internal_platform_state.state = NULL;
-    
-    internal_platform_state.event_state = lotus_init_event();
-    internal_platform_state.input_state = lotus_init_input();
-
-    LARGE_INTEGER frequency;
-    QueryPerformanceFrequency(&frequency);
-    internal_platform_state.clock_frequency = 1.0 / (f64)frequency.QuadPart;
-    
-    return &internal_platform_state;
-}
-
-void lotus_exit_platform(void) {
+void _windows_shutdown_impl(void) {
+    UnregisterClass("Lotus Window Class", GetModuleHandle(NULL));
     lotus_exit_event();
     lotus_exit_input();
-    internal_platform_state.state = NULL;
-    return;
 }
 
 LRESULT CALLBACK _window_proc(HWND handle, ubyte4 msg, WPARAM w, LPARAM l) {
@@ -107,7 +93,7 @@ LRESULT CALLBACK _window_proc(HWND handle, ubyte4 msg, WPARAM w, LPARAM l) {
     return DefWindowProcA(handle, msg, w, l);
 }
 
-Lotus_Window lotus_create_platform_window(const char* title, int width, int height) {
+Lotus_Window _windows_create_window_impl(const char* title, int width, int height) {
     Lotus_Window window;
 
     window.internal_data = (Platform_Window_Data*)malloc(sizeof(Platform_Window_Data));
@@ -156,12 +142,11 @@ Lotus_Window lotus_create_platform_window(const char* title, int width, int heig
     window.size[0] = width;
     window.size[1] = height;
     window.aspect_ratio = (float)width / height;
-    window.gl_context = NULL;
 
     return window;
 }
 
-void lotus_destroy_platform_window(Lotus_Window* window) {
+void _windows_destroy_window_impl(Lotus_Window* window) {
     if (window && window->internal_data) {
         Platform_Window_Data* data = (Platform_Window_Data*)window->internal_data;
         if (data->handle) {
@@ -172,10 +157,10 @@ void lotus_destroy_platform_window(Lotus_Window* window) {
     }
 }
 
-bool lotus_create_platform_gl_context(Lotus_Window* window) {
+ubyte _windows_create_gl_context_impl(Lotus_Window* window) {
     if (!window || !window->internal_data) {
-        printf("window_ptr/window->internal_data_ptr invalid!\n");
-        return false;
+        lotus_log_error("window_ptr/window->internal_data_ptr invalid!\n");
+        return LOTUS_FALSE;
     }
 
     Platform_Window_Data* data = (Platform_Window_Data*)window->internal_data;
@@ -198,27 +183,26 @@ bool lotus_create_platform_gl_context(Lotus_Window* window) {
 
     int format = ChoosePixelFormat(data->device_context, &pfd);
     if (!SetPixelFormat(data->device_context, format, &pfd)) {
-        printf("failed to set pixel format\n");
-        return false;
+        lotus_log_error("failed to set pixel format\n");
+        return LOTUS_FALSE;
     }
 
     data->gl_context = wglCreateContext(data->device_context);
     if (!data->gl_context) {
-        printf("failed to create gl context\n");
-        return false;
+        lotus_log_error("failed to create gl context\n");
+        return LOTUS_FALSE;
     }
 
     if (!wglMakeCurrent(data->device_context, data->gl_context)) {
-        printf("failed to bind gl context\n");
+        lotus_log_error("failed to bind gl context\n");
         wglDeleteContext(data->gl_context);
-        return false;
+        return LOTUS_FALSE;
     }
 
-    window->gl_context = data->gl_context;
-    return true;
+    return LOTUS_TRUE;
 }
 
-void lotus_destroy_platform_gl_context(Lotus_Window* window) {
+void _windows_destroy_gl_context_impl(Lotus_Window* window) {
     if (!window || !window->internal_data) return;
 
     Platform_Window_Data* data = (Platform_Window_Data*)window->internal_data;
@@ -226,34 +210,92 @@ void lotus_destroy_platform_gl_context(Lotus_Window* window) {
         wglMakeCurrent(NULL, NULL);
         wglDeleteContext(data->gl_context);
         data->gl_context = NULL;
-        window->gl_context = NULL;
     }
 }
 
-double lotus_get_platform_time() {
+double _windows_get_time_impl() {
     LARGE_INTEGER counter;
     QueryPerformanceCounter(&counter);
     return (double)counter.QuadPart / internal_platform_state.clock_frequency;
 }
 
-void lotus_sleep_platform(f64 seconds) {
+void _windows_sleep_impl(f64 seconds) {
     Sleep((DWORD)(seconds * 1000.0));
 }
 
-void lotus_swap_platform_buffers(Lotus_Window* window) {
+void _windows_swap_buffers_impl(Lotus_Window* window) {
     if (!window || !window->internal_data) return;
 
     Platform_Window_Data* data = (Platform_Window_Data*)window->internal_data;
     SwapBuffers(data->device_context);
 }
 
-ubyte lotus_pump_platform_messages(void) {
+ubyte _windows_poll_events_impl(void) {
     MSG message;
     while(PeekMessageA(&message, NULL, 0, 0, PM_REMOVE)) {
         TranslateMessage(&message);
         DispatchMessageA(&message);
     }
     return LOTUS_TRUE;
+}
+
+void* _windows_get_gl_context_impl(Lotus_Window* window) {
+    Platform_Window_Data* window_data = (Platform_Window_Data*)window->internal_data;
+    return window_data->gl_context;
+}
+
+Lotus_Platform_State* _windows_get_state_impl(void) { return &internal_platform_state; }
+
+Lotus_DyLib _windows_load_library_impl(const char* path, const char* name) {
+    Lotus_DyLib library = { .name = name, .handle = LoadLibrary(path)};
+    if (!library.handle) {
+        lotus_log_error("Failed to load library: %s", path);
+    }
+    return library;
+}
+
+ubyte _windows_unload_library_impl(Lotus_DyLib* library) {
+    if (library && library->handle) {
+        if (FreeLibrary(library->handle)) {
+            library->handle = NULL;
+            return LOTUS_TRUE;
+        }
+        lotus_log_error("Failed to unload library: %s (OSError: %lu)", library->name, GetLastError());
+    }
+    return LOTUS_FALSE;
+}
+
+Lotus_Platform_API* lotus_init_platform(void) {
+    internal_platform_state.platform = LOTUS_WINDOWS_TAG;
+    
+    internal_platform_state.event_state = lotus_init_event();
+    internal_platform_state.input_state = lotus_init_input();
+
+    LARGE_INTEGER frequency;
+    QueryPerformanceFrequency(&frequency);
+    internal_platform_state.clock_frequency = 1.0 / (f64)frequency.QuadPart;
+
+    internal_platform_api = (Lotus_Platform_API) {
+        .get_state = _windows_get_state_impl,
+        .shutdown = _windows_shutdown_impl,
+        .get_time = _windows_get_time_impl,
+        .sleep = _windows_sleep_impl,
+        
+        .load_library = _windows_load_library_impl,
+        .unload_library = _windows_unload_library_impl,
+        
+        .poll_events = _windows_poll_events_impl,
+        
+        .create_window = _windows_create_window_impl,
+        .destroy_window = _windows_destroy_window_impl,
+        
+        .create_gl_context = _windows_create_gl_context_impl,
+        .get_gl_context = _windows_get_gl_context_impl,
+        .swap_buffers = _windows_swap_buffers_impl,
+        .destroy_gl_context = _windows_destroy_gl_context_impl
+    };
+
+    return &internal_platform_api;
 }
 
 #endif // LOTUS_PLATFORM_WINDOWS == LOTUS_TRUE
