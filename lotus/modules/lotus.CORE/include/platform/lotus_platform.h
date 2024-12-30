@@ -39,6 +39,7 @@ typedef struct Lotus_Platform_API {
     void (*sleep)(f64 seconds);
     
     Lotus_DyLib (*load_library)(const char* path, const char* name);
+    void* (*get_library_symbol)(Lotus_DyLib* library, const char* symbol_name);
     ubyte (*unload_library)(Lotus_DyLib* library);
     
     ubyte (*poll_events)(void);

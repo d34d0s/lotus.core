@@ -24,6 +24,10 @@
     #include "../modules/lotus.SCENE/include/lotus_scene.h"
 #endif  // LOTUS_SCENE
 
+#if defined(LOTUS_PLUG)
+    #include "../modules/lotus.PLUG/include/lotus_plug.h"
+#endif  // LOTUS_PLUG
+
 #if defined(LOTUS_PLATFORM)
     #include "../modules/lotus.CORE/include/platform/lotus_memory.h"
     #include "../modules/lotus.CORE/include/platform/lotus_input.h"

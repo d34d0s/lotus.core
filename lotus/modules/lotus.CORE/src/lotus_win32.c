@@ -159,7 +159,7 @@ void _windows_destroy_window_impl(Lotus_Window* window) {
 
 ubyte _windows_create_gl_context_impl(Lotus_Window* window) {
     if (!window || !window->internal_data) {
-        lotus_log_error("window_ptr/window->internal_data_ptr invalid!\n");
+        lotus_log_error("window_ptr/window->internal_data_ptr invalid!");
         return LOTUS_FALSE;
     }
 
@@ -183,18 +183,18 @@ ubyte _windows_create_gl_context_impl(Lotus_Window* window) {
 
     int format = ChoosePixelFormat(data->device_context, &pfd);
     if (!SetPixelFormat(data->device_context, format, &pfd)) {
-        lotus_log_error("failed to set pixel format\n");
+        lotus_log_error("failed to set pixel format");
         return LOTUS_FALSE;
     }
 
     data->gl_context = wglCreateContext(data->device_context);
     if (!data->gl_context) {
-        lotus_log_error("failed to create gl context\n");
+        lotus_log_error("failed to create gl context");
         return LOTUS_FALSE;
     }
 
     if (!wglMakeCurrent(data->device_context, data->gl_context)) {
-        lotus_log_error("failed to bind gl context\n");
+        lotus_log_error("failed to bind gl context");
         wglDeleteContext(data->gl_context);
         return LOTUS_FALSE;
     }
@@ -240,29 +240,50 @@ ubyte _windows_poll_events_impl(void) {
 }
 
 void* _windows_get_gl_context_impl(Lotus_Window* window) {
-    Platform_Window_Data* window_data = (Platform_Window_Data*)window->internal_data;
-    return window_data->gl_context;
+    if (!window || !window->internal_data) {
+        lotus_log_error("Invalid window or internal data!");
+        return NULL;
+    }
+
+    Platform_Window_Data* data = (Platform_Window_Data*)window->internal_data;
+    return (void*)data->gl_context;
 }
 
 Lotus_Platform_State* _windows_get_state_impl(void) { return &internal_platform_state; }
 
 Lotus_DyLib _windows_load_library_impl(const char* path, const char* name) {
-    Lotus_DyLib library = { .name = name, .handle = LoadLibrary(path)};
-    if (!library.handle) {
-        lotus_log_error("Failed to load library: %s", path);
+    char full_path[MAX_PATH];
+    snprintf(full_path, sizeof(full_path), "%s/%s.dll", path, name);
+
+    HMODULE handle = LoadLibrary(full_path);
+    if (!handle) {
+        lotus_log_error("Failed to load library: %s", full_path);
+        return (Lotus_DyLib){.name = NULL, .handle = NULL};
     }
-    return library;
+
+    Lotus_DyLib lib = {.name = strdup(name), .handle = handle};
+    return lib;
+}
+
+void* _windows_get_library_symbol_impl(Lotus_DyLib* library, const char* symbol_name) {
+    if (!library || !library->handle || !symbol_name) {
+        lotus_log_error("Invalid library or symbol name");
+        return NULL;
+    }
+    return (void*)GetProcAddress((HMODULE)library->handle, symbol_name);
 }
 
 ubyte _windows_unload_library_impl(Lotus_DyLib* library) {
-    if (library && library->handle) {
-        if (FreeLibrary(library->handle)) {
-            library->handle = NULL;
-            return LOTUS_TRUE;
-        }
-        lotus_log_error("Failed to unload library: %s (OSError: %lu)", library->name, GetLastError());
+    if (!library || !library->handle) return LOTUS_FALSE;
+
+    if (!FreeLibrary((HMODULE)library->handle)) {
+        lotus_log_error("Failed to unload library: %s", library->name);
+        return LOTUS_FALSE;
     }
-    return LOTUS_FALSE;
+
+    free((char*)library->name);
+    library->handle = NULL;
+    return LOTUS_TRUE;
 }
 
 Lotus_Platform_API* lotus_init_platform(void) {
@@ -282,6 +303,7 @@ Lotus_Platform_API* lotus_init_platform(void) {
         .sleep = _windows_sleep_impl,
         
         .load_library = _windows_load_library_impl,
+        .get_library_symbol = _windows_get_library_symbol_impl,
         .unload_library = _windows_unload_library_impl,
         
         .poll_events = _windows_poll_events_impl,

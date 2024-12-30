@@ -108,6 +108,27 @@ int main() {
     e0_mesh = app_api->get_component(scene_id, LOTUS_MESH_COMPONENT, e0);
     e0_transform = app_api->get_component(scene_id, LOTUS_TRANSFORM_COMPONENT, e0);
 
+    // plugin api example
+    Lotus_Plug_API* plug_api = app->resource.plug_api;
+    
+    // load and get Lotus_Plug structure
+    sbyte plugin_id = plug_api->load_plug(app->resource.platform_api, "plugs/", "test_plug");
+    if (plugin_id >= 0) {
+        Lotus_Plug* test_plug = plug_api->get_plug("test_plug");
+        if (test_plug != NULL) {
+            
+            // register plug functions
+            if (plug_api->register_function(app->resource.platform_api, test_plug, "hello_plug")) {
+                Lotus_Function_Pointer hello_plug_ptr = plug_api->get_function(test_plug, "hello_plug");
+                if (hello_plug_ptr) {
+                    hello_plug_ptr();
+                }
+            }
+            
+            printf("My Lotus Plug: (name)%s | (id)%d | (functions)%d\n", test_plug->name, plugin_id, test_plug->function_count);
+        }
+    }
+
     my_shader = lotus_make_shader(vShader, fShader);
     lotus_set_renderer_shader(&my_shader);
     

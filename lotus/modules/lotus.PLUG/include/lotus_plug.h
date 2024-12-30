@@ -26,7 +26,7 @@ typedef struct Lotus_Plug {
     Lotus_Plug_Initialize initialize;
 
     ubyte function_count;
-    Lotus_Function_Pointer* functions;
+    Lotus_Plug_Function* functions;
 } Lotus_Plug;
 
 typedef struct Lotus_Plug_Manager {
@@ -40,7 +40,7 @@ typedef struct Lotus_Plug_API {
 
     sbyte (*load_plug)(Lotus_Platform_API* platform_api, const char* path, const char* name);
     Lotus_Plug* (*get_plug)(const char* name);
-    ubyte (*register_function)(Lotus_Plug* plug, const char* name);
+    ubyte (*register_function)(Lotus_Platform_API* platform_api, Lotus_Plug* plug, const char* name);
     Lotus_Function_Pointer (*get_function)(Lotus_Plug* plug, const char* name);
     ubyte (*unload_plug)(Lotus_Platform_API* platform_api, const char* name);
 } Lotus_Plug_API;
