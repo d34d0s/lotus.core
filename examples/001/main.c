@@ -31,7 +31,8 @@ Lotus_Vec3 up = {0.0f, 1.0f, 0.0f};
 Lotus_Vec3 eye = {0.0f, 0.0f, 1.0f};
 Lotus_Vec3 center = {0.0f, 0.0f, 0.0f};
 
-Lotus_Application app;
+Lotus_Application_API* app_api;
+Lotus_Application* app;
 Lotus_Scene* scene;
 
 Lotus_Entity e0;
@@ -104,13 +105,15 @@ void ecs_test() {
 }
 
 int main() {
-    lotus_init_application(&app, "My Application", LOTUS_VEC2(ubyte4, 1280, 720));
+    app_api = lotus_init_application();
 
-    sbyte scene_id = lotus_create_application_scene(&app, "My Scene");
+    app = app_api->initialize("My Application", LOTUS_VEC2(ubyte4, 1280, 720));
+
+    sbyte scene_id = app_api->create_scene("My Scene");
     printf("scene id created: %d\n", scene_id);
 
     if (scene_id >= 0) {
-        scene = lotus_get_application_scene(&app, scene_id);
+        scene = app_api->get_scene(scene_id);
     }
 
     lotus_draw_begin(LOTUS_TRIANGLE_MODE, 133, 161, 172, 255, lotus_perspective(lotus_to_radians(45.0), 1280/720, 0.1, 1000.0));
@@ -118,7 +121,7 @@ int main() {
 
     ecs_test();
 
-    lotus_set_application_midframe(&app, midframe);
+    app_api->set_midframe(midframe);
 
     my_shader = lotus_make_shader(vShader, fShader);
     lotus_set_renderer_shader(&my_shader);
@@ -130,7 +133,7 @@ int main() {
     m_view = lotus_look_at(eye, center, up);
     lotus_set_shader_uniform(my_shader, "u_view", &m_view);
     
-    lotus_run_application(&app);
+    app_api->run();
 
     lotus_rem_component(&scene->component_manager, LOTUS_MESH_COMPONENT, e0);
     
