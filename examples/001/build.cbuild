@@ -3,7 +3,7 @@
     "project": "example_001",
     "include_dirs": ["../../lotus/include"],
     "source_dirs": ["./"],
-    "libraries": { "LotusEngine": "../../build/lotus" },
+    "libraries": { "LotusEngine": "../../build/win32/lotus" },
     "output": "exe",
     "output_dir": "build"
 }
