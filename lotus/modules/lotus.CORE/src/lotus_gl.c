@@ -38,7 +38,7 @@ void lotus_set_renderer_shader(Lotus_Shader* shader) {
     lotus_set_shader_uniform(*internal_renderer_state.shader, "u_projection", &internal_renderer_state.projection);
 }
 
-void lotus_draw_submit(ubyte4 vbo, ubyte4 ebo, ubyte4 vao, Lotus_Mat4* matrix, ubyte4 index_count, ubyte4 vertex_count) {
+void lotus_draw_submit(ubyte4 vbo, ubyte4 ebo, ubyte4 vao, ubyte4 index_count, ubyte4 vertex_count) {
     if (internal_renderer_state.draws >= LOTUS_MAX_DRAW_BUFFERS) {
         return; // error: exceeded max draw buffers
     }
@@ -48,7 +48,6 @@ void lotus_draw_submit(ubyte4 vbo, ubyte4 ebo, ubyte4 vao, Lotus_Mat4* matrix, u
         .handle[LOTUS_BUFFER_VBO] = vbo,
         .handle[LOTUS_BUFFER_VAO] = vao,
         .handle[LOTUS_BUFFER_EBO] = ebo,
-        .matrix = matrix,
         .index_count = index_count,
         .vertex_count = vertex_count
     });

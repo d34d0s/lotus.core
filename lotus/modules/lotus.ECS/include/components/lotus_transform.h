@@ -5,10 +5,10 @@
 #include "../../../lotus.core/include/utility/lotus_math.h"
 
 typedef struct Lotus_Transform {
-    Lotus_Mat4 model;
-    Lotus_Vec3 scale;
-    Lotus_Vec3 rotation;
-    Lotus_Vec3 location;
+    Lotus_Mat4* model;
+    Lotus_Vec3* scale;
+    Lotus_Vec3* rotation;
+    Lotus_Vec3* location;
 } Lotus_Transform;
 
 typedef struct Lotus_Transform_Data {

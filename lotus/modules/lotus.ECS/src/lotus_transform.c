@@ -72,10 +72,10 @@ void _lotus_set_transform(void* data, Lotus_Component component, Lotus_Entity en
     if (!_lotus_validate_transform_data(transform_data)) return;
     
     if (component.type == LOTUS_TRANSFORM_COMPONENT) {
-        transform_data->model[entity] = component.data.transform.model;
-        transform_data->scale[entity] = component.data.transform.scale;
-        transform_data->rotation[entity] = component.data.transform.rotation;
-        transform_data->location[entity] = component.data.transform.location;
+        transform_data->model[entity] = *component.data.transform.model;
+        transform_data->scale[entity] = *component.data.transform.scale;
+        transform_data->rotation[entity] = *component.data.transform.rotation;
+        transform_data->location[entity] = *component.data.transform.location;
     } else { return; }
 }
 
@@ -85,9 +85,9 @@ Lotus_Component _lotus_get_transform(void* data, Lotus_Entity entity) {
 
     return (Lotus_Component){
         .type = LOTUS_TRANSFORM_COMPONENT,
-        .data.transform.model = transform_data->model[entity],
-        .data.transform.scale = transform_data->scale[entity],
-        .data.transform.rotation = transform_data->rotation[entity],
-        .data.transform.location = transform_data->location[entity]
+        .data.transform.model = &transform_data->model[entity],
+        .data.transform.scale = &transform_data->scale[entity],
+        .data.transform.rotation = &transform_data->rotation[entity],
+        .data.transform.location = &transform_data->location[entity]
     };
 }

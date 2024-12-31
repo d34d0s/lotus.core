@@ -62,33 +62,22 @@ void load_plug() {
 ubyte midframe_callback(Lotus_Event data, ubyte2 event_code) {
     if (event_code == LOTUS_APPLICATION_MIDFRAME_EVENT) {
         f32 speed = 0.01;
-        Lotus_Vec3 new_location = lotus_new_vec3(
-            e0_transform.data.transform.location.x,
-            e0_transform.data.transform.location.y,
-            e0_transform.data.transform.location.z
-        );
 
-        if (lotus_key_is_down(LOTUS_KEY_A)) new_location.x -= speed;
-        if (lotus_key_is_down(LOTUS_KEY_D)) new_location.x += speed;
+        if (lotus_key_is_down(LOTUS_KEY_A)) e0_transform.data.transform.location->x -= speed;
+        if (lotus_key_is_down(LOTUS_KEY_D)) e0_transform.data.transform.location->x += speed;
         
-        if (lotus_key_is_down(LOTUS_KEY_W)) new_location.y += speed;
-        if (lotus_key_is_down(LOTUS_KEY_S)) new_location.y -= speed;
+        if (lotus_key_is_down(LOTUS_KEY_W)) e0_transform.data.transform.location->y += speed;
+        if (lotus_key_is_down(LOTUS_KEY_S)) e0_transform.data.transform.location->y -= speed;
         
         if (lotus_key_is_down(LOTUS_KEY_F5)) load_plug();
 
         // apply transforms before sending data to GPU
-        Lotus_Mat4 m_translation = lotus_mul_mat4(lotus_identity(), lotus_trans_mat4(
-            new_location.x,
-            new_location.y,
-            new_location.z
+        // translation
+        *e0_transform.data.transform.model = lotus_mul_mat4(lotus_identity(), lotus_trans_mat4(
+            e0_transform.data.transform.location->x,
+            e0_transform.data.transform.location->y,
+            e0_transform.data.transform.location->z
         ));
-
-        // update component data internally and then externally
-        app_api->set_component(scene_id, (Lotus_Component){
-            .type = LOTUS_TRANSFORM_COMPONENT,
-            .data.transform.model = m_translation,
-            .data.transform.location = new_location,
-        }, e0); e0_transform = app_api->get_component(scene_id, LOTUS_TRANSFORM_COMPONENT, e0);
 
         lotus_send_shader_uniform(my_shader, LOTUS_UNIFORM_MAT4, "u_view");
 
@@ -96,7 +85,6 @@ ubyte midframe_callback(Lotus_Event data, ubyte2 event_code) {
             e0_mesh.data.mesh.vbo,
             e0_mesh.data.mesh.ebo,
             e0_mesh.data.mesh.vao,
-            &e0_transform.data.transform.model,
             e0_mesh.data.mesh.n_indices,
             e0_mesh.data.mesh.n_vertices
         ); return LOTUS_TRUE;
@@ -134,7 +122,7 @@ int main() {
     lotus_set_renderer_shader(&my_shader);
     
     // set model matrix
-    lotus_set_shader_uniform(my_shader, "u_model", &e0_transform.data.transform.model);
+    lotus_set_shader_uniform(my_shader, "u_model", e0_transform.data.transform.model);
 
     // set view matrix
     m_view = lotus_look_at(eye, center, up);

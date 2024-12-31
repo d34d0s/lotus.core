@@ -63,7 +63,6 @@ typedef struct Lotus_Uniform {
 
 typedef struct Lotus_Draw_Buffer {
     ubyte4 handle[3];
-    Lotus_Mat4* matrix;
     ubyte4 index_count;
     ubyte4 vertex_count;
 } Lotus_Draw_Buffer;
@@ -88,7 +87,7 @@ typedef struct Lotus_Renderer {
 
 void lotus_init_renderer(void);
 void lotus_draw_begin(Lotus_Draw_Mode mode, f32 r, f32 g, f32 b, f32 a, Lotus_Mat4 projection);
-void lotus_draw_submit(ubyte4 vbo, ubyte4 ebo, ubyte4 vao, Lotus_Mat4* matrix, ubyte4 index_count, ubyte4 vertex_count);
+void lotus_draw_submit(ubyte4 vbo, ubyte4 ebo, ubyte4 vao, ubyte4 index_count, ubyte4 vertex_count);
 void lotus_draw_flush(void);
 void lotus_destroy_renderer(void);
 
