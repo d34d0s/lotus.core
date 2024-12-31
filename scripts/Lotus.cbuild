@@ -20,5 +20,5 @@
         "opengl32": null
     },
     "output": "dll",
-    "output_dir": "build/win32/lotus"
+    "output_dir": "build"
 }

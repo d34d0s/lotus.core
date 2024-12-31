@@ -9,6 +9,7 @@
 typedef enum Lotus_Platform_Tag {
     LOTUS_WINDOWS_TAG,
     LOTUS_MACOS_TAG,
+    LOTUS_LINUX_TAG,
     LOTUS_PLATFORM_TAGS
 } Lotus_Platform_Tag;
 
