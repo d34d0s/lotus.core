@@ -1,21 +1,29 @@
-#define LOTUS_PLUG
-#include "../../lotus/include/lotus.h"
+// tst_plug.c
+#include "test_plug.h"
 
-LOTUS_API_ENTRY void hello_plug(void);
-LOTUS_API_ENTRY void goodbye_plug(void);
-
-void plug_init(void) {
-    printf("My Lotus Plug Init!\n");
-}
-
-void plug_shutdown(void) {
-    printf("My Lotus Plug Shutdown!\n");
-}
-
-void hello_plug(void) {
+// plugin API implementation
+void hello_plug_impl(void) {
     printf("Hello Lotus Plug!\n");
 }
 
-void goodbye_plug(void) {
+void goodbye_plug_impl(void) {
     printf("Goodbye Lotus Plug!\n");
 }
+
+int add_numbers_impl(int a, int b) { return a + b; }
+
+// plugin API configuration
+LOTUS_DEFINE_PLUG_INIT(
+    printf("My Lotus Plug Init!\n");
+)
+
+LOTUS_DEFINE_PLUG_SHUTDOWN(
+    printf("My Lotus Plug Shutdown!\n");
+)
+
+LOTUS_EXPORT_PLUG_API(Test_Plug_API,
+    hello_plug_impl,
+    goodbye_plug_impl,
+    add_numbers_impl
+);
+

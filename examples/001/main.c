@@ -1,6 +1,8 @@
 #define LOTUS_APPLICATION
 #include "../../lotus/include/lotus.h"
 
+#include "plugs/test_plug/include/test_plug.h"
+
 char vShader[] = {
     "#version 460 core\n"
     "layout(location = 0) in vec3 a_Location;\n"
@@ -39,6 +41,24 @@ Lotus_Entity e0;
 Lotus_Component e0_mesh;
 Lotus_Component e0_transform;
 
+// lotus plug example
+void load_plug() {
+    Lotus_Plug_API* plug_api = app->resource.plug_api;
+    // load a plugin
+    Lotus_Plug* test_plug = plug_api->load_plug(app->resource.platform_api, "plugs/test_plug/bin", "test_plug");
+    if (test_plug) {
+        // export and use the plugin's API
+        Test_Plug_API* test_plug_api = test_plug->export_api();
+        if (!test_plug_api) {
+            printf("Failed to export plugin API\n");
+        } else printf("Exported plugin API!\n");
+
+        test_plug_api->hello_plug();
+        printf("Addition Result: %d\n", test_plug_api->add_numbers(33*2, 3));
+        test_plug_api->goodbye_plug();
+    }; plug_api->unload_plug(app->resource.platform_api, "test_plug");
+}
+
 ubyte midframe_callback(Lotus_Event data, ubyte2 event_code) {
     if (event_code == LOTUS_APPLICATION_MIDFRAME_EVENT) {
         f32 speed = 0.01;
@@ -53,6 +73,8 @@ ubyte midframe_callback(Lotus_Event data, ubyte2 event_code) {
         
         if (lotus_key_is_down(LOTUS_KEY_W)) new_location.y += speed;
         if (lotus_key_is_down(LOTUS_KEY_S)) new_location.y -= speed;
+        
+        if (lotus_key_is_down(LOTUS_KEY_F5)) load_plug();
 
         // apply transforms before sending data to GPU
         Lotus_Mat4 m_translation = lotus_mul_mat4(lotus_identity(), lotus_trans_mat4(
@@ -107,27 +129,6 @@ int main() {
 
     e0_mesh = app_api->get_component(scene_id, LOTUS_MESH_COMPONENT, e0);
     e0_transform = app_api->get_component(scene_id, LOTUS_TRANSFORM_COMPONENT, e0);
-
-    // plugin api example
-    Lotus_Plug_API* plug_api = app->resource.plug_api;
-    
-    // load and get Lotus_Plug structure
-    sbyte plugin_id = plug_api->load_plug(app->resource.platform_api, "plugs/", "test_plug");
-    if (plugin_id >= 0) {
-        Lotus_Plug* test_plug = plug_api->get_plug("test_plug");
-        if (test_plug != NULL) {
-            
-            // register plug functions
-            if (plug_api->register_function(app->resource.platform_api, test_plug, "hello_plug")) {
-                Lotus_Function_Pointer hello_plug_ptr = plug_api->get_function(test_plug, "hello_plug");
-                if (hello_plug_ptr) {
-                    hello_plug_ptr();
-                }
-            }
-            
-            printf("My Lotus Plug: (name)%s | (id)%d | (functions)%d\n", test_plug->name, plugin_id, test_plug->function_count);
-        }
-    }
 
     my_shader = lotus_make_shader(vShader, fShader);
     lotus_set_renderer_shader(&my_shader);
