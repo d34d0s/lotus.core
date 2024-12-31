@@ -101,8 +101,8 @@ void lotus_destroy_renderer() {
 
 Lotus_Shader lotus_make_shader(const char* vertex_shader, const char* fragment_shader) {
     lotus_set_log_level(LOTUS_LOG_ERROR);
-    sbyte4 link = 0;
-    sbyte4 compile = 0;
+    ubyte4 link = 0;
+    ubyte4 compile = 0;
 
     Lotus_Shader program = {.uniforms=lotus_make_hashmap(16)};
     if (!program.uniforms) {

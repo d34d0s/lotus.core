@@ -2,7 +2,7 @@
 
 #include "../lotus_ecs_types.h"
 
-#include "../../../lotus.core/include/utility/lotus_math.h"
+#include "../../../lotus.CORE/include/utility/lotus_math.h"
 
 typedef struct Lotus_Transform {
     Lotus_Mat4* model;

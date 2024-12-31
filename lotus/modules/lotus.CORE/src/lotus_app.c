@@ -179,6 +179,7 @@ ubyte _application_init_ecs_impl(ubyte scene_id) {
     if (scene != NULL) {
         return lotus_init_ecs(&scene->entity_namager, &scene->component_manager);
     }
+    return LOTUS_FALSE;
 }
 
 void _application_shutdown_ecs_impl(ubyte scene_id) {
@@ -193,6 +194,7 @@ Lotus_Entity _application_make_entity_impl(ubyte scene_id) {
     if (scene != NULL) {
         return lotus_make_entity(&scene->entity_namager);
     }
+    return LOTUS_ENTITY_MAX+1;
 }
 
 ubyte _application_kill_entity_impl(ubyte scene_id, Lotus_Entity entity) {
@@ -200,6 +202,7 @@ ubyte _application_kill_entity_impl(ubyte scene_id, Lotus_Entity entity) {
     if (scene != NULL) {
         return lotus_kill_entity(&scene->entity_namager, entity);
     }
+    return LOTUS_FALSE;
 }
 
 ubyte _application_register_component_impl(
@@ -215,6 +218,7 @@ ubyte _application_register_component_impl(
     if (scene != NULL) {
         return lotus_register_component(&scene->component_manager, type, data, add_component, rem_component, set_component, get_component);
     }
+    return LOTUS_FALSE;
 }
 
 ubyte _application_unregister_component_impl(ubyte scene_id, Lotus_Component_Type type) {
@@ -222,6 +226,7 @@ ubyte _application_unregister_component_impl(ubyte scene_id, Lotus_Component_Typ
     if (scene != NULL) {
         return lotus_unregister_component(&scene->component_manager, type);
     }
+    return LOTUS_FALSE;
 }
 
 void _application_add_component_impl(ubyte scene_id, Lotus_Component_Type type, Lotus_Entity entity) {
@@ -236,6 +241,7 @@ ubyte _application_has_component_impl(ubyte scene_id, Lotus_Component_Type type,
     if (scene != NULL) {
         return lotus_has_component(&scene->component_manager, type, entity);
     }
+    return LOTUS_FALSE;
 }
 
 void _application_rem_component_impl(ubyte scene_id, Lotus_Component_Type type, Lotus_Entity entity) {
@@ -257,6 +263,8 @@ Lotus_Component _application_get_component_impl(ubyte scene_id, Lotus_Component_
     if (scene != NULL) {
         return lotus_get_component(&scene->component_manager, type, entity);
     }
+
+    return (Lotus_Component){ .type = LOTUS_COMPONENT_MAX+1 };
 }
 
 

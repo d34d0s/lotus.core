@@ -100,6 +100,7 @@ const ubyte *(*lgl_get_string)(const ubyte4 name);
         return proc;
     }
 #elif defined(LOTUS_PLATFORM_MACOS) || defined(LOTUS_PLATFORM_LINUX)
+#include "dlfcn.h"
     void* lotus_get_fptr(const char* name) {
         // OpenGL on macOS and Linux is loaded from the OpenGL library using dlopen/dlsym
         void* libGL = dlopen("libGL.dylib", 0x1);  // macOS uses libGL.dylib, Linux uses libGL.so

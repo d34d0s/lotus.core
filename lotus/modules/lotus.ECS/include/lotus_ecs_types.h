@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../lotus.core/include/defines.h"
+#include "../../lotus.CORE/include/defines.h"
 
 typedef unsigned int Lotus_Entity;
 #define LOTUS_ENTITY_MAX ((1U << 16) - 1)

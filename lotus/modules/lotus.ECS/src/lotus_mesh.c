@@ -3,10 +3,10 @@
 #include <stdlib.h>
 #include "../include/components/lotus_component.h"
 
-#include "../../lotus.core/include/utility/lotus_array.h"
+#include "../../lotus.CORE/include/utility/lotus_array.h"
 
-#include "../../lotus.core/include/graphics/lotus_gl.h"
-#include "../../lotus.core/include/graphics/lotus_glapi.h"
+#include "../../lotus.CORE/include/graphics/lotus_gl.h"
+#include "../../lotus.CORE/include/graphics/lotus_glapi.h"
 
 ubyte _lotus_init_mesh_data(Lotus_Mesh_Data* data) {
     data->attrs = (ubyte*)lotus_make_array(sizeof(ubyte), LOTUS_ENTITY_MAX);

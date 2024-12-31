@@ -15,10 +15,6 @@
         "lotus/modules/lotus.PLUG/src"
     ],
     "defines": ["LOTUS_EXPORT"],
-    "libraries": {
-        "gdi32": null,
-        "opengl32": null
-    },
     "output": "dylib",
-    "output_dir": "build/win32/lotus"
+    "output_dir": "build/macos/lotus"
 }

@@ -6,22 +6,10 @@ typedef struct Platform_Window_Data {
     void* state;
 } Platform_Window_Data;
 
-Lotus_Platform_State* lotus_platform_init(void) {}
+static Lotus_Platform_API internal_platform_api = {0};
 
-void lotus_platform_exit(void) {}
+Lotus_Platform_API* lotus_init_platform(void) { return NULL; }
 
-Lotus_Window lotus_platform_make_window(char* title, sbyte4 x, sbyte4 y, sbyte4 w, sbyte4 h) {}
-
-void lotus_platform_destroy_window(Lotus_Window* window) {}
-
-f64 lotus_platform_get_time(void) {}
-
-void lotus_platform_sleep(ubyte8 ms) {}
-
-ubyte lotus_platform_pump(void) {}
-
-ubyte lotus_platform_make_glcontext(Lotus_Window* window) {}
-
-void lotus_platform_swap_buffers(Lotus_Window* window) {}
+void lotus_platform_exit(void) { return; }
 
 #endif

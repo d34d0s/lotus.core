@@ -2,7 +2,7 @@
 
 #include "../include/components/lotus_component.h"
 
-#include "../../lotus.core/include/utility/lotus_array.h"
+#include "../../lotus.CORE/include/utility/lotus_array.h"
 
 ubyte _lotus_init_transform_data(Lotus_Transform_Data* data) {
     data->model = (Lotus_Mat4*)lotus_make_array(sizeof(Lotus_Mat4), LOTUS_ENTITY_MAX);
