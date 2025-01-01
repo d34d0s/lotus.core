@@ -28,7 +28,7 @@ LRESULT CALLBACK _window_proc(HWND handle, ubyte4 msg, WPARAM w, LPARAM l) {
         case WM_QUIT:       // fall through WM_DESTROY
         case WM_CLOSE:      // fall through WM_DESTROY
         case WM_DESTROY:
-            lotus_push_event((Lotus_Event){.data.ubyte[0]=1}, LOTUS_EVENT_APP_QUIT);
+            lotus_push_event((Lotus_Event){.event_data.ubyte[0]=1}, LOTUS_EVENT_APP_QUIT);
             PostQuitMessage(0);
             return 0;
         case WM_SIZE: {
@@ -37,7 +37,7 @@ LRESULT CALLBACK _window_proc(HWND handle, ubyte4 msg, WPARAM w, LPARAM l) {
             ubyte2 w = r.right - r.left;
             ubyte2 h = r.bottom - r.top;
             // TODO: handle resize event with resize callback
-            lotus_push_event((Lotus_Event){.data.ubyte2[0]=w, .data.ubyte2[1]=h}, LOTUS_EVENT_RESIZE);
+            lotus_push_event((Lotus_Event){.event_data.ubyte2[0]=w, .event_data.ubyte2[1]=h}, LOTUS_EVENT_RESIZE);
         } break;
         case WM_KEYUP:          // fall trough WM_SYSKEYUP
         case WM_KEYDOWN:        // fall trough WM_SYSKEYUP

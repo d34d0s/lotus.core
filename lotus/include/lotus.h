@@ -36,8 +36,7 @@
 #endif  // LOTUS_PLATFORM
 
 #if defined(LOTUS_GRAPHICS)
-    #include "../modules/lotus.CORE/include/graphics/lotus_gfx.h"
-    #include "../modules/lotus.CORE/include/graphics/lotus_glapi.h"
+    #include "../modules/lotus.CORE/include/graphics/lotus_gl.h"
 #endif // LOTUS_GRAPHICS
 
 #if defined(LOTUS_ECS)
@@ -53,6 +52,5 @@
     #include "../modules/lotus.CORE/include/platform/lotus_event.h"
     #include "../modules/lotus.CORE/include/platform/lotus_platform.h"
     
-    #include "../modules/lotus.CORE/include/graphics/lotus_gfx.h"
-    #include "../modules/lotus.CORE/include/graphics/lotus_glapi.h"
+    #include "../modules/lotus.CORE/include/graphics/lotus_gl.h"
 #endif  // LOTUS_CORE

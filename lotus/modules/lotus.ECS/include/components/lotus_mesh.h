@@ -15,8 +15,8 @@ typedef struct Lotus_Mesh {
     ubyte4 vbo;
     ubyte4 ebo;
     ubyte4 vao;
-    ubyte4 n_vertices;
-    ubyte4 n_indices;
+    ubyte4 vertex_count;
+    ubyte4 index_count;
     f32* vertices;
     ubyte4* indices;
 } Lotus_Mesh;
@@ -26,13 +26,13 @@ typedef struct Lotus_Mesh_Data {
     ubyte4* vbo;
     ubyte4* ebo;
     ubyte4* vao;
-    ubyte4* n_vertices;
-    ubyte4* n_indices;
+    ubyte4* vertex_count;
+    ubyte4* index_count;
     f32** vertices;   // raw floating-point vertex data
     ubyte4** indices;
 } Lotus_Mesh_Data;
 
-ubyte _lotus_init_mesh_data(Lotus_Mesh_Data* data);
+ubyte _lotus_init_mesh_data(Lotus_Mesh_Data* data, void* graphics_api);
 void _lotus_destroy_mesh_data(Lotus_Mesh_Data* data);
 
 void _lotus_add_mesh(void* data, Lotus_Entity entity);

@@ -33,8 +33,9 @@ Lotus_Vec3 up = {0.0f, 1.0f, 0.0f};
 Lotus_Vec3 eye = {0.0f, 0.0f, 1.0f};
 Lotus_Vec3 center = {0.0f, 0.0f, 0.0f};
 
-Lotus_Application_API* app_api;
-Lotus_Application* app;
+Lotus_Application_API* app_api = NULL;
+
+Lotus_Application* app = NULL;
 ubyte scene_id;
 
 Lotus_Entity e0;
@@ -79,22 +80,22 @@ ubyte midframe_callback(Lotus_Event data, ubyte2 event_code) {
             e0_transform.data.transform.location->z
         ));
 
-        lotus_send_shader_uniform(my_shader, LOTUS_UNIFORM_MAT4, "u_view");
+        app->resource.graphics_api->send_uniform(&my_shader, LOTUS_UNIFORM_MAT4, "u_view");
 
-        lotus_draw_submit(
-            e0_mesh.data.mesh.vbo,
-            e0_mesh.data.mesh.ebo,
-            e0_mesh.data.mesh.vao,
-            e0_mesh.data.mesh.n_indices,
-            e0_mesh.data.mesh.n_vertices
-        ); return LOTUS_TRUE;
+        app->resource.graphics_api->draw((Lotus_Vertex_Data){
+            .vbo = e0_mesh.data.mesh.vbo,
+            .ebo = e0_mesh.data.mesh.ebo,
+            .vao = e0_mesh.data.mesh.vao,
+            .vertices = e0_mesh.data.mesh.vertices,
+            .vertex_count = e0_mesh.data.mesh.vertex_count
+        }); return LOTUS_TRUE;
     }; return LOTUS_FALSE;
 }
 
 int main() {
     app_api = lotus_init_application();
     app = app_api->initialize("My Application", LOTUS_VEC2(ubyte4, 1280, 720));
-
+    
     sbyte scene_id = app_api->create_scene("My Scene");
 
     e0 = app_api->make_entity(scene_id);
@@ -106,7 +107,7 @@ int main() {
         (Lotus_Component){ 
             .type = LOTUS_MESH_COMPONENT, 
             .data.mesh.attrs = LOTUS_LOCATION_ATTR | LOTUS_COLOR_ATTR,
-            .data.mesh.n_vertices = 3,
+            .data.mesh.vertex_count = 3,
             .data.mesh.vertices = (f32[]){
                 -0.5, -0.5, 0.5, 1.0, 0.0, 0.0,
                  0.5, -0.5, 0.5, 0.0, 1.0, 0.0,
@@ -118,19 +119,20 @@ int main() {
     e0_mesh = app_api->get_component(scene_id, LOTUS_MESH_COMPONENT, e0);
     e0_transform = app_api->get_component(scene_id, LOTUS_TRANSFORM_COMPONENT, e0);
 
-    my_shader = lotus_make_shader(vShader, fShader);
-    lotus_set_renderer_shader(&my_shader);
+    my_shader = app->resource.graphics_api->make_shader(vShader, fShader);
+    app->resource.graphics_api->set_shader(&my_shader);
     
     // set model matrix
-    lotus_set_shader_uniform(my_shader, "u_model", e0_transform.data.transform.model);
+    app->resource.graphics_api->set_uniform(&my_shader, "u_model", e0_transform.data.transform.model);
 
     // set view matrix
     m_view = lotus_look_at(eye, center, up);
-    lotus_set_shader_uniform(my_shader, "u_view", &m_view);
+    app->resource.graphics_api->set_uniform(&my_shader, "u_view", &m_view);
     
-    lotus_draw_begin(LOTUS_TRIANGLE_MODE, 133, 161, 172, 255, lotus_perspective(lotus_to_radians(45.0), 1280/720, 0.1, 1000.0));
+    app->resource.graphics_api->draw_begin(LOTUS_TRIANGLE_MODE, LOTUS_COLOR4(133, 161, 172, 255), lotus_perspective(lotus_to_radians(45.0), 1280/720, 0.1, 1000.0));
     // lotus_draw_begin(LOTUS_TRIANGLE_MODE, 133, 161, 172, 255, lotus_ortho(0, 1, 0, 1, 0.1, 10));
     app_api->set_callback(LOTUS_APPLICATION_MIDFRAME_EVENT, midframe_callback);
+    
     app_api->run();
     
     return 0;

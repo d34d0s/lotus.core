@@ -3,11 +3,11 @@
 static Lotus_Mesh_Data internal_mesh_data = {0};
 static Lotus_Transform_Data internal_transform_data = {0};
 
-ubyte lotus_init_ecs(Lotus_Entity_Manager* e_manager, Lotus_Component_Manager* c_manager) {
+ubyte lotus_init_ecs(void* graphics_api, Lotus_Entity_Manager* e_manager, Lotus_Component_Manager* c_manager) {
     e_manager->next = 0;
     e_manager->count = 0;
 
-    if (_lotus_init_mesh_data(&internal_mesh_data)) {
+    if (_lotus_init_mesh_data(&internal_mesh_data, graphics_api)) {
         lotus_register_component(
             c_manager, LOTUS_MESH_COMPONENT, &internal_mesh_data,
             _lotus_add_mesh,

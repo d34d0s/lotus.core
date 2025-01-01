@@ -75,7 +75,7 @@ void lotus_mouse_get_last_position(sbyte4* x, sbyte4* y) {
 
 void lotus_process_mouse_wheel_input(sbyte z_delotus_a) {
     Lotus_Event event;
-    event.data.sbyte[0] = z_delotus_a;
+    event.event_data.sbyte[0] = z_delotus_a;
     lotus_push_event(event, LOTUS_EVENT_MOUSE_WHEEL);
 }
 
@@ -85,8 +85,8 @@ void lotus_process_mouse_move_input(sbyte2 x, sbyte2 y) {
         internal_input_state.current.mouse[1] = y;
 
         Lotus_Event event;
-        event.data.ubyte2[0] = x;
-        event.data.ubyte2[1] = y;
+        event.event_data.ubyte2[0] = x;
+        event.event_data.ubyte2[1] = y;
         lotus_push_event(event, LOTUS_EVENT_MOUSE_MOVE);
     }
 }
@@ -96,7 +96,7 @@ void lotus_process_key_input(Lotus_Keyboard_Key key, ubyte pressed) {
         internal_input_state.current.keys[key] = pressed;
 
         Lotus_Event event;
-        event.data.ubyte2[0] = key;
+        event.event_data.ubyte2[0] = key;
         lotus_push_event(event, pressed ? LOTUS_EVENT_KEY_PRESSED : LOTUS_EVENT_KEY_RELEASED);
     }
 }
@@ -106,7 +106,7 @@ void lotus_process_mouse_button_input(Lotus_Mouse_Button button, ubyte pressed) 
         internal_input_state.current.buttons[button] = pressed;
 
         Lotus_Event event;
-        event.data.ubyte2[0] = button;
+        event.event_data.ubyte2[0] = button;
         lotus_push_event(event, pressed ? LOTUS_EVENT_BUTTON_PRESSED : LOTUS_EVENT_BUTTON_RELEASED);
     }
 }

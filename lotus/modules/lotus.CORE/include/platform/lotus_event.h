@@ -65,7 +65,7 @@ typedef enum Lotus_Event_Code {
 struct Lotus_Event {
     Lotus_Event_Callback callback;
     // 128 byte maximum
-    union data {
+    union event_data {
         sbyte8 sbyte8[2];
         ubyte8 ubyte8[2];
         f64 f64[2];
@@ -80,7 +80,7 @@ struct Lotus_Event {
         sbyte sbyte[16];
         ubyte ubyte[16];
         char c[16];
-    } data;    
+    } event_data;
 };
 
 typedef struct Lotus_Event_Register {

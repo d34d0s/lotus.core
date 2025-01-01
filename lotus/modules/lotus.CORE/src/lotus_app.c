@@ -1,6 +1,5 @@
 #include "../include/application/lotus_app.h"
 
-#include "../include/graphics/lotus_glapi.h"
 #include "../include/platform/lotus_logger.h"
 
 // internal application instance pointer
@@ -27,11 +26,6 @@ ubyte _application_create_window_impl(const char* title, ubyte4 size[2]) {
         return LOTUS_FALSE;
     }
     
-    if (!lotus_load_fptrs()) {
-        lotus_log_fatal("Failed to load GL function pointers!");
-        return LOTUS_FALSE;
-    }
-
     return LOTUS_TRUE;
 }
 
@@ -63,7 +57,7 @@ ubyte _application_run_impl(void) {
         }
 
         result = lotus_push_event((Lotus_Event){0}, LOTUS_APPLICATION_MIDFRAME_EVENT);
-        lotus_draw_flush();
+        internal_application_instance.resource.graphics_api->draw_end();
         
         // postframe logic
         if (internal_application_instance.callbacks[LOTUS_APPLICATION_POSTFRAME_EVENT]) {
@@ -81,21 +75,32 @@ sbyte _application_create_scene_impl(const char* scene_name) {
     if (internal_application_instance.state.scene_count + 1 > LOTUS_ENGINE_SCENE_MAX) { return -1; }
 
     ubyte scene_id = internal_application_instance.state.scene_count++;
-    internal_application_instance.resource.scene_map[scene_id] = lotus_init_scene(scene_id, scene_name);
+    internal_application_instance.resource.scenes[scene_id] = lotus_init_scene(scene_id, scene_name);
+    internal_application_instance.state.current_scene = internal_application_instance.resource.scenes[scene_id];
+    internal_application_api.init_ecs(scene_id);
 
     return scene_id;
 }
 
+ubyte _application_set_scene_impl(ubyte scene_id) {
+    if (scene_id > LOTUS_ENGINE_SCENE_MAX) return LOTUS_FALSE;
+    internal_application_instance.state.current_scene = internal_application_instance.resource.scenes[scene_id];
+    return LOTUS_TRUE;
+}
+
 Lotus_Scene* _application_get_scene_impl(ubyte scene_id) {
     if (scene_id > LOTUS_ENGINE_SCENE_MAX) return NULL;
-    Lotus_Scene* scene = internal_application_instance.resource.scene_map[scene_id];
+    Lotus_Scene* scene = internal_application_instance.resource.scenes[scene_id];
     return scene;
 }
 
 void _application_destroy_scene_impl(ubyte scene_id) {
     if (scene_id > LOTUS_ENGINE_SCENE_MAX || internal_application_instance.state.scene_count - 1 < 0) { return; }
+    
+    internal_application_api.shutdown_ecs(scene_id);
+    lotus_destroy_scene(internal_application_instance.resource.scenes[scene_id]);
+    internal_application_instance.state.current_scene = NULL;
     internal_application_instance.state.scene_count--;
-    lotus_destroy_scene(internal_application_instance.resource.scene_map[scene_id]);
 }
 
 Lotus_Application* _application_initialize_impl(const char* app_name, ubyte4 window_size[2]) {
@@ -126,9 +131,13 @@ Lotus_Application* _application_initialize_impl(const char* app_name, ubyte4 win
         lotus_log_fatal("Failed to create application window!");
         return NULL;
     }
-
-    lotus_init_renderer();
     
+    internal_application_instance.resource.graphics_api = lotus_init_graphics();
+    if (!internal_application_instance.resource.graphics_api) {
+        lotus_log_fatal("Failed to initialize graphics api!");
+        return NULL;
+    }
+
     internal_application_instance.resource.plug_api = lotus_init_plug();
     if (!internal_application_instance.resource.plug_api) {
         lotus_log_fatal("Failed to initialize plug api!");
@@ -152,15 +161,19 @@ void _application_shutdown_impl(void) {
 
     for (ubyte i = 0; i < internal_application_instance.state.scene_count; i++) {
         internal_application_api.destroy_scene(i);
-    }
+    }; internal_application_instance.state.scene_count = 0;
 
     for (ubyte i = 0; i < LOTUS_APPLICATION_EVENTS; i++) {
         lotus_unregister_event_callback(i, internal_application_instance.callbacks[i]);
-    }
+    }; internal_application_instance.state.callback_count = 0;
 
     internal_application_api.destroy_window();
+    
+    internal_application_instance.resource.plug_api->shutdown(internal_application_instance.resource.platform_api);
+    internal_application_instance.resource.plug_api = NULL;
 
-    lotus_destroy_renderer();
+    internal_application_instance.resource.graphics_api->shutdown();
+    internal_application_instance.resource.graphics_api = NULL;
 
     internal_application_instance.resource.platform_api->shutdown();
     internal_application_instance.resource.platform_api = NULL;
@@ -169,28 +182,29 @@ void _application_shutdown_impl(void) {
 ubyte _application_set_callback_impl(Lotus_Application_Event event, Lotus_Event_Callback callback) {
     if (internal_application_instance.callbacks[event]) return LOTUS_FALSE; // event callback exists
     internal_application_instance.callbacks[event] = callback;
+    internal_application_instance.state.callback_count++;
     return lotus_register_event_callback(event, callback);
 }
 
 
 // ECS wrapper implementation
 ubyte _application_init_ecs_impl(ubyte scene_id) {
-    Lotus_Scene* scene = internal_application_instance.resource.scene_map[scene_id];
-    if (scene != NULL) {
-        return lotus_init_ecs(&scene->entity_namager, &scene->component_manager);
+    Lotus_Scene* scene = internal_application_instance.resource.scenes[scene_id];
+    if (scene != NULL || internal_application_instance.resource.graphics_api != NULL) {
+        return lotus_init_ecs(internal_application_instance.resource.graphics_api, &scene->entity_namager, &scene->component_manager);
     }
     return LOTUS_FALSE;
 }
 
 void _application_shutdown_ecs_impl(ubyte scene_id) {
-    Lotus_Scene* scene = internal_application_instance.resource.scene_map[scene_id];
+    Lotus_Scene* scene = internal_application_instance.resource.scenes[scene_id];
     if (scene != NULL) {
         lotus_shutdown_ecs(&scene->entity_namager, &scene->component_manager);
     }
 }
 
 Lotus_Entity _application_make_entity_impl(ubyte scene_id) {
-    Lotus_Scene* scene = internal_application_instance.resource.scene_map[scene_id];
+    Lotus_Scene* scene = internal_application_instance.resource.scenes[scene_id];
     if (scene != NULL) {
         return lotus_make_entity(&scene->entity_namager);
     }
@@ -198,7 +212,7 @@ Lotus_Entity _application_make_entity_impl(ubyte scene_id) {
 }
 
 ubyte _application_kill_entity_impl(ubyte scene_id, Lotus_Entity entity) {
-    Lotus_Scene* scene = internal_application_instance.resource.scene_map[scene_id];
+    Lotus_Scene* scene = internal_application_instance.resource.scenes[scene_id];
     if (scene != NULL) {
         return lotus_kill_entity(&scene->entity_namager, entity);
     }
@@ -214,7 +228,7 @@ ubyte _application_register_component_impl(
     _set_component_ptr set_component,
     _get_component_ptr get_component
 ) {
-    Lotus_Scene* scene = internal_application_instance.resource.scene_map[scene_id];
+    Lotus_Scene* scene = internal_application_instance.resource.scenes[scene_id];
     if (scene != NULL) {
         return lotus_register_component(&scene->component_manager, type, data, add_component, rem_component, set_component, get_component);
     }
@@ -222,7 +236,7 @@ ubyte _application_register_component_impl(
 }
 
 ubyte _application_unregister_component_impl(ubyte scene_id, Lotus_Component_Type type) {
-    Lotus_Scene* scene = internal_application_instance.resource.scene_map[scene_id];
+    Lotus_Scene* scene = internal_application_instance.resource.scenes[scene_id];
     if (scene != NULL) {
         return lotus_unregister_component(&scene->component_manager, type);
     }
@@ -230,14 +244,14 @@ ubyte _application_unregister_component_impl(ubyte scene_id, Lotus_Component_Typ
 }
 
 void _application_add_component_impl(ubyte scene_id, Lotus_Component_Type type, Lotus_Entity entity) {
-    Lotus_Scene* scene = internal_application_instance.resource.scene_map[scene_id];
+    Lotus_Scene* scene = internal_application_instance.resource.scenes[scene_id];
     if (scene != NULL) {
         return lotus_add_component(&scene->component_manager, type, entity);
     }
 }
 
 ubyte _application_has_component_impl(ubyte scene_id, Lotus_Component_Type type, Lotus_Entity entity) {
-    Lotus_Scene* scene = internal_application_instance.resource.scene_map[scene_id];
+    Lotus_Scene* scene = internal_application_instance.resource.scenes[scene_id];
     if (scene != NULL) {
         return lotus_has_component(&scene->component_manager, type, entity);
     }
@@ -245,21 +259,21 @@ ubyte _application_has_component_impl(ubyte scene_id, Lotus_Component_Type type,
 }
 
 void _application_rem_component_impl(ubyte scene_id, Lotus_Component_Type type, Lotus_Entity entity) {
-    Lotus_Scene* scene = internal_application_instance.resource.scene_map[scene_id];
+    Lotus_Scene* scene = internal_application_instance.resource.scenes[scene_id];
     if (scene != NULL) {
         lotus_rem_component(&scene->component_manager, type, entity);
     }
 }
 
 void _application_set_component_impl(ubyte scene_id, Lotus_Component component, Lotus_Entity entity) {
-    Lotus_Scene* scene = internal_application_instance.resource.scene_map[scene_id];
+    Lotus_Scene* scene = internal_application_instance.resource.scenes[scene_id];
     if (scene != NULL) {
         lotus_set_component(&scene->component_manager, component, entity);
     }
 }
 
 Lotus_Component _application_get_component_impl(ubyte scene_id, Lotus_Component_Type type, Lotus_Entity entity) {
-    Lotus_Scene* scene = internal_application_instance.resource.scene_map[scene_id];
+    Lotus_Scene* scene = internal_application_instance.resource.scenes[scene_id];
     if (scene != NULL) {
         return lotus_get_component(&scene->component_manager, type, entity);
     }
@@ -278,6 +292,7 @@ Lotus_Application_API* lotus_init_application(void) {
         
         .create_scene = _application_create_scene_impl,
         .get_scene = _application_get_scene_impl,
+        .set_scene = _application_set_scene_impl,
         .destroy_scene = _application_destroy_scene_impl,
         
         .set_callback = _application_set_callback_impl,
